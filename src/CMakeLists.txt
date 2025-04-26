@@ -1,7 +1,4 @@
 set(MAIN_TARGET ${PROJECT_NAME})
 
 add_executable(${MAIN_TARGET} main.cpp)
-
-set_target_properties(${MAIN_TARGET} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+target_link_libraries(${MAIN_TARGET} PRIVATE SDL3::SDL3)
