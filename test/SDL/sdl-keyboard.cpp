@@ -80,6 +80,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         const SDL_KeyboardEvent &eventKey = event->key;
         const SDL_Scancode &scancode = eventKey.scancode;
         SDL_Log("Key pressed: %d", scancode);
+        switch (scancode)
+        {
+        case SDL_SCANCODE_ESCAPE:
+            return SDL_APP_SUCCESS;
+        }
     }
     }
     return SDL_APP_CONTINUE;
