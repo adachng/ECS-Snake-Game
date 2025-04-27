@@ -85,6 +85,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         case SDL_SCANCODE_ESCAPE:
             return SDL_APP_SUCCESS;
         }
+        break;
     }
     }
     return SDL_APP_CONTINUE;
