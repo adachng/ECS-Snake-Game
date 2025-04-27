@@ -1,6 +1,6 @@
 {
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/extern/**/include",
-        "${workspaceFolder}/extern/entt/single_include",
+        "${workspaceFolder}/third_party/**/include",
+        "${workspaceFolder}/third_party/entt/single_include",
     ],
 }

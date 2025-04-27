@@ -1,6 +1,6 @@
 [submodule "extern/SDL"]
-	path = extern/SDL
+	path = third_party/SDL
 	url = https://github.com/libsdl-org/SDL/
 [submodule "extern/entt"]
-	path = extern/entt
+	path = third_party/entt
 	url = https://github.com/skypjack/entt/
