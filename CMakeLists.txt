@@ -8,4 +8,4 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>") # for
 
 add_subdirectory(extern)
 add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory(spike)
