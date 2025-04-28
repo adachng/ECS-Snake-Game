@@ -7,9 +7,15 @@
 
 struct AppState
 {
+    Uint64 previousTick; // for FixedUpdate() equivalent
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
 };
+
+void update(const Uint64 &ms)
+{
+    std::cout << "Updated at time = " << ms << "ms" << std::endl;
+}
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
 {
@@ -44,6 +50,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
         return SDL_APP_FAILURE;
     }
 
+    appstateCasted->previousTick = SDL_GetTicks(); // for FixedUpdate() equivalent
     return SDL_APP_CONTINUE;
 }
 
@@ -51,19 +58,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     AppState *appstateCasted = static_cast<AppState *>(appstate);
 
-    if (appstateCasted->window == nullptr)
+    const Uint64 now = SDL_GetTicks();
+    while (now - appstateCasted->previousTick >= 100) // for FixedUpdate() equivalent
     {
-        std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
-        SDL_Quit();
-        return SDL_APP_FAILURE;
-    }
-
-    if (appstateCasted->renderer == nullptr)
-    {
-        std::cerr << "SDL_CreateRenderer error: " << SDL_GetError() << std::endl;
-        SDL_DestroyWindow(appstateCasted->window);
-        SDL_Quit();
-        return SDL_APP_FAILURE;
+        update(now);
+        appstateCasted->previousTick += 100;
     }
 
     return SDL_APP_CONTINUE;
