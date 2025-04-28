@@ -32,9 +32,6 @@
 *.app
 
 # .gitignore template entries from https://github.com/github/gitignore end on this line #
-# Build folder
-build
-cmake
 
 # .out and .exe files
 *.out
