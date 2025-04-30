@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(Snake-Game-CLI
+project(Snake-Game-CPP
     LANGUAGES CXX
 )
 
