@@ -11,42 +11,28 @@
 
 namespace SystemTranslate2D
 {
-    static void init(sigslot::signal<entt::registry &> &signal) // TODO: WIP
-    {
-        static bool hasInit = false;
-        if (!hasInit)
-        {
-            hasInit = true;
-            auto lambda = [](entt::registry &reg)
-            {
-                // TODO: assert deltaTimeView size to be 1
-                auto deltaTimeView = reg.view<DeltaTime>();
-                if (!deltaTimeView.empty())
-                {
-                    const DeltaTime dT = deltaTimeView.get(deltaTimeView.front());
-                    auto translateView = reg.view<Position, Velocity>();
-                    translateView.each([const & dT](Position &pos, const Velocity &vel)
-                                       {
-                        pos.x += vel.x * (dT.dt_ms / 1000.0f);
-                        pos.y += vel.y * (dT.dt_ms / 1000.0f); });
-                }
-            };
-            signal.connect(lambda);
-        }
-    }
-
-    static void run(entt::registry &reg) // TODO: WIP
+    static void iterate(entt::registry &reg)
     {
         // TODO: assert deltaTimeView size to be 1
         auto deltaTimeView = reg.view<DeltaTime>();
         if (!deltaTimeView.empty())
         {
-            const DeltaTime dT = deltaTimeView.get(deltaTimeView.front());
+            DeltaTime &dT = reg.get<DeltaTime>(deltaTimeView.front());
             auto translateView = reg.view<Position, Velocity>();
-            translateView.each([const & dT](Position &pos, const Velocity &vel)
+            translateView.each([&dT](Position &pos, const Velocity &vel)
                                {
                         pos.x += vel.x * (dT.dt_ms / 1000.0f);
                         pos.y += vel.y * (dT.dt_ms / 1000.0f); });
+        }
+    }
+
+    static void init(sigslot::signal<entt::registry &> &signal)
+    {
+        static bool hasInit = false;
+        if (!hasInit)
+        {
+            hasInit = true;
+            signal.connect(SystemTranslate2D::iterate);
         }
     }
 } // namespace SystemTranslate2D
