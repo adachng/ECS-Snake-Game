@@ -1,3 +1,9 @@
+## Project Overview
+
+This project was created as a learning exercise to explore the Entity Component System (ECS) architectural pattern, Test-Driven Development (TDD) methodology, and SDL library integration while strengthening C++ programming skills.
+
+The classic game mechanics are preserved. The player controls a snake that grows longer when consuming food while avoiding collisions with walls and itself.
+
 ## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
