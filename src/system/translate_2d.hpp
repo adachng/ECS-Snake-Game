@@ -2,7 +2,7 @@
 #ifndef SRC_SYSTEM_TRANSLATE_2D_HPP
 #define SRC_SYSTEM_TRANSLATE_2D_HPP
 
-#include <SDL3/SDL.h>
+#include <SDL3/SDL_assert.h>
 #include <entt/entt.hpp>
 #include <sigslot/signal.hpp>
 
