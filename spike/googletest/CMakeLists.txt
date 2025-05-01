@@ -1,13 +1,7 @@
 enable_testing()
+link_libraries(GTest::gtest_main)
 
-add_executable(
-    gtest_factorial
-    gtest_factorial.cpp
-)
-target_link_libraries(
-    gtest_factorial
-    GTest::gtest_main
-)
+add_executable(googletest_factorial googletest_factorial.cpp)
 
 include(GoogleTest)
-gtest_discover_tests(gtest_factorial)
+gtest_discover_tests(googletest_factorial)
