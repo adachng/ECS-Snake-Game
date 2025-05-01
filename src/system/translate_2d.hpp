@@ -1,4 +1,3 @@
-#pragma once
 #ifndef SRC_SYSTEM_TRANSLATE_2D_HPP
 #define SRC_SYSTEM_TRANSLATE_2D_HPP
 

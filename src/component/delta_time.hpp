@@ -1,4 +1,3 @@
-#pragma once
 #ifndef SRC_COMPONENT_DELTA_TIME_HPP
 #define SRC_COMPONENT_DELTA_TIME_HPP
 

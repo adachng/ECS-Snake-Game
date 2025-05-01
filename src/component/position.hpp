@@ -1,4 +1,3 @@
-#pragma once
 #ifndef SRC_COMPONENT_POSITION_HPP
 #define SRC_COMPONENT_POSITION_HPP
 
