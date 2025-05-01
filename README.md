@@ -24,6 +24,12 @@ This software uses third-party libraries provided 'as-is'. See individual licens
 **License:** MIT License (see [license/EnTT.txt](license/EnTT.txt))<br>
 **Usage:** Entity-component-system architecture implementation.
 
+### [sigslot](https://github.com/palacaze/sigslot) ([Sigslot v1.2.2](https://github.com/palacaze/sigslot/releases/tag/v1.2.2))
+
+**Copyright:** © 2017 Pierre-Antoine Lacaze<br>
+**License:** MIT License (see [license/sigslot.txt](license/sigslot.txt))<br>
+**Usage:** Observer pattern implementation.
+
 ### [googletest](https://github.com/google/googletest) ([`main` branch](https://github.com/google/googletest?tab=readme-ov-file#live-at-head))
 
 **Copyright:** © 2008 Google Inc.<br>

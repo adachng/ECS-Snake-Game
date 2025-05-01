@@ -1,6 +1,7 @@
 {
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/third_party/**/include",
+        "${workspaceFolder}/third_party/SDL/include",
         "${workspaceFolder}/third_party/entt/single_include",
+        "${workspaceFolder}/third_party/sigslot/include",
     ],
 }
