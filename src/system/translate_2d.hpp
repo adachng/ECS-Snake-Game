@@ -2,6 +2,7 @@
 #ifndef SRC_SYSTEM_TRANSLATE_2D_HPP
 #define SRC_SYSTEM_TRANSLATE_2D_HPP
 
+#include <SDL3/SDL.h>
 #include <entt/entt.hpp>
 #include <sigslot/signal.hpp>
 
@@ -13,10 +14,10 @@ namespace SystemTranslate2D
 {
     static void iterate(entt::registry &reg)
     {
-        // TODO: assert deltaTimeView size to be 1
         auto deltaTimeView = reg.view<DeltaTime>();
         if (!deltaTimeView.empty())
         {
+            SDL_assert(deltaTimeView.size() == 1);
             DeltaTime &dT = reg.get<DeltaTime>(deltaTimeView.front());
             auto translateView = reg.view<Position, Velocity>();
             translateView.each([&dT](Position &pos, const Velocity &vel)
