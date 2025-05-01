@@ -7,6 +7,21 @@
 
 namespace
 {
+    TEST(Translate2DSystemTest, MultipleInit)
+    {
+        sigslot::signal<entt::registry &> gameplaySceneSignal;
+        sigslot::signal<entt::registry &> mainMenuSceneSignal;
+        sigslot::signal<entt::registry &> creditsSceneSignal;
+
+        EXPECT_TRUE(SystemTranslate2D::init(gameplaySceneSignal));
+        EXPECT_TRUE(SystemTranslate2D::init(mainMenuSceneSignal));
+        EXPECT_TRUE(SystemTranslate2D::init(creditsSceneSignal));
+
+        EXPECT_FALSE(SystemTranslate2D::init(gameplaySceneSignal));
+        EXPECT_FALSE(SystemTranslate2D::init(mainMenuSceneSignal));
+        EXPECT_FALSE(SystemTranslate2D::init(creditsSceneSignal));
+    }
+
     TEST(Translate2DSystemTest, DeltaTimeMissing)
     {
         entt::registry reg;
