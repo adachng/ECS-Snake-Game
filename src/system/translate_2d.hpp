@@ -26,14 +26,24 @@ namespace SystemTranslate2D
         }
     }
 
-    static void init(sigslot::signal<entt::registry &> &signal)
+    static bool init(sigslot::signal<entt::registry &> &signal)
     {
-        static bool hasInit = false;
-        if (!hasInit)
+        static std::list<sigslot::signal<entt::registry &> *> regSignalArray;
+        bool ret = true;
+        for (auto connectedSignal : regSignalArray)
         {
-            hasInit = true;
-            signal.connect(SystemTranslate2D::iterate);
+            if (connectedSignal == &signal)
+            {
+                ret = false;
+                break;
+            }
         }
+        if (ret)
+        {
+            signal.connect(SystemTranslate2D::iterate);
+            regSignalArray.push_back(&signal);
+        }
+        return ret;
     }
 } // namespace SystemTranslate2D
 
