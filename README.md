@@ -1,3 +1,7 @@
+## License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+
 ## External Dependencies
 
 This software uses third-party libraries provided 'as-is'. See individual license files for complete terms.
