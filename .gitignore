@@ -30,9 +30,3 @@
 *.exe
 *.out
 *.app
-
-# .gitignore template entries from https://github.com/github/gitignore end on this line #
-
-# .out and .exe files
-*.out
-*.exe
