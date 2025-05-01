@@ -1,7 +1,3 @@
 {
-    "C_Cpp.default.includePath": [
-        "${workspaceFolder}/third_party/SDL/include",
-        "${workspaceFolder}/third_party/entt/single_include",
-        "${workspaceFolder}/third_party/sigslot/include",
-    ],
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
