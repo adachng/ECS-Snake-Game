@@ -38,12 +38,19 @@ int main()
 
     sigNoArg();
 
-    // With arguments
+    // With argument
+    auto lambdaArg = [](float &x)
+    {
+        std::cout << "Adding 2 to x which is " << x << std::endl;
+        x += 2.0f;
+    };
+
     float arg = 1.23f;
     sigslot::signal<float &> sig;
 
     sig.connect(fArg);
     sig.connect(oArg());
+    sig.connect(lambdaArg);
 
     std::cout << "x = " << arg << std::endl;
     sig(arg);
