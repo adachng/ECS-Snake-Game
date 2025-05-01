@@ -22,5 +22,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>") # for
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>") # for libSDL3.so etc.
 
 add_subdirectory(third_party)
-add_subdirectory(src)
 add_subdirectory(spike)
+add_subdirectory(src)
+add_subdirectory(test)
