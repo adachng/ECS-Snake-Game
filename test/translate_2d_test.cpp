@@ -20,6 +20,10 @@ namespace
         EXPECT_FALSE(SystemTranslate2D::init(gameplaySceneSignal));
         EXPECT_FALSE(SystemTranslate2D::init(mainMenuSceneSignal));
         EXPECT_FALSE(SystemTranslate2D::init(creditsSceneSignal));
+
+        EXPECT_FALSE(SystemTranslate2D::init(gameplaySceneSignal));
+        EXPECT_FALSE(SystemTranslate2D::init(mainMenuSceneSignal));
+        EXPECT_FALSE(SystemTranslate2D::init(creditsSceneSignal));
     }
 
     TEST(Translate2DSystemTest, DeltaTimeMissing)
