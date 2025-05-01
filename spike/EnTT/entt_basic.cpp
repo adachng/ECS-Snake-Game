@@ -83,8 +83,11 @@ void two_comp()
     auto entity2 = registry.create();
     registry.emplace<Position>(entity2, 4.1f, 4.2f);
 
-    auto view = registry.view<Position, Velocity>();
+    auto view = registry.view<Position, Velocity>(); // does not have entity2
     view.each([](const Position &pos, const Velocity &vel)
               { std::cout << "Position: (" << pos.x << ", " << pos.y << ")\n"
-                          << "Velocity: (" << vel.x << ", " << vel.y << ")" << std::endl; });
+                          << "Velocity: (" << vel.x << ", " << vel.y << ")" << std::endl; }); // print
+    auto posView = registry.view<Position>();
+    posView.each([](const Position &pos)
+                 { std::cout << "Position: (" << pos.x << ", " << pos.y << ")" << std::endl; }); // print
 }
