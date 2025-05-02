@@ -25,6 +25,7 @@ namespace SystemTranslate2D
                         pos.y += vel.y * (dT.dt_ms / 1000.0f); });
         }
     }
+    static void update(entt::registry &reg) { return iterate(reg); }
 
     static bool init(sigslot::signal<entt::registry &> &signal)
     {
