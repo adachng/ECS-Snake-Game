@@ -11,7 +11,7 @@ struct o
 
 void fArg(float &x)
 {
-    std::cout << "Adding 2 to x which is " << x << std::endl;
+    std::cout << "fArg: adding 2 to x which is " << x << std::endl;
     x += 2.0f;
 }
 
@@ -19,7 +19,7 @@ struct oArg
 {
     void operator()(float &x)
     {
-        std::cout << "Adding 2 to x which is " << x << std::endl;
+        std::cout << "oArg: adding 2 to x which is " << x << std::endl;
         x += 2.0f;
     }
 };
@@ -41,7 +41,7 @@ int main()
     // With argument
     auto lambdaArg = [](float &x)
     {
-        std::cout << "Adding 2 to x which is " << x << std::endl;
+        std::cout << "Lambda: adding 2 to x which is " << x << std::endl;
         x += 2.0f;
     };
 
