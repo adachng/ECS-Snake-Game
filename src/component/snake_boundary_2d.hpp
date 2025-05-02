@@ -3,10 +3,8 @@
 
 struct SnakeBoundary2D
 {
-    int x1;
-    int x2;
-    int y1;
-    int y2;
+    int x;
+    int y;
 }; // struct SnakeBoundary2D
 
 #endif // SRC_COMPONENT_SNAKE_BOUNDARY_2D_HPP
