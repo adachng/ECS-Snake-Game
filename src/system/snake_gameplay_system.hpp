@@ -67,30 +67,194 @@ namespace SnakeGameplaySystem
         }
     } // namespace Util
 
+    template <typename T = entt::entity>
+    static T *get_snake_body_at_indices(entt::registry &reg, const int &targetI, const int &targetJ, const int &sizeY);
+
     static std::vector<std::vector<MapSlotState>> get_map(entt::registry &reg);
     static bool is_game_success(entt::registry &reg);
     static bool is_game_failure(entt::registry &reg);
     static bool is_going_backwards(entt::registry &reg, const char &directionToGo);
     static void do_trailing(entt::registry &reg, const bool &isAteApple)
     { // NOTE: this function is the reason why the update loop NEEDS to limit DeltaTime
-        static auto previousMap = get_map(reg);
         auto currentMap = get_map(reg);
+        static auto previousMap = get_map(reg); // TODO: static is not good for different source file usage
         if (currentMap == previousMap)
             return;
+
+        struct Index
+        {
+            explicit Index(const int &_i, const int &_j) : i(_i), j(_j) {}
+            int i;
+            int j;
+        }; // struct Index
+
+        auto getSnakeHeadIndices = [](const std::vector<std::vector<MapSlotState>> &map)
+        {
+            Index ret(-1, -1);
+            for (int i = 0; i < map.size(); i++)
+            {
+                for (int j = 0; j < map[i].size(); j++)
+                {
+                    if (map[i][j] & MapSlotState::SNAKE_HEAD)
+                        return Index(i, j);
+                }
+            }
+            return ret;
+        };
+
+        Index previousSnakeHeadIndex = getSnakeHeadIndices(previousMap);
+        Index currentSnakeHeadIndex = getSnakeHeadIndices(currentMap);
+
+        if (previousSnakeHeadIndex.i == currentSnakeHeadIndex.i && previousSnakeHeadIndex.j == currentSnakeHeadIndex.j)
+        {
+            previousMap = currentMap;
+            return;
+        }
+
+        char travelledDirection = '\t';
+        if (currentSnakeHeadIndex.i < previousSnakeHeadIndex.i)
+            travelledDirection = 'w';
+        else if (currentSnakeHeadIndex.j < previousSnakeHeadIndex.j)
+            travelledDirection = 'a';
+        else if (currentSnakeHeadIndex.i > previousSnakeHeadIndex.i)
+            travelledDirection = 's';
+        else if (currentSnakeHeadIndex.j > previousSnakeHeadIndex.j)
+            travelledDirection = 'd';
+
+        SDL_Log("do_trailing(): travelledDirection = %c, isAteApple = %d", travelledDirection, isAteApple);
+
+        previousMap = currentMap;
+        SDL_assert(travelledDirection != '\t');
+        if (travelledDirection == '\t')
+            return;
+
         auto snakePartView = reg.view<SnakePart>();
         if (snakePartView.empty())
         {
+            SDL_Log("snakePartView.empty() is true!");
+            if (!isAteApple)
+                return;
+
+            auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
+            SDL_assert(snakeBoundaryView.size() == 1);
+            const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
+            const int i = currentSnakeHeadIndex.i, j = currentSnakeHeadIndex.j;
+            switch (travelledDirection)
+            {
+            case 'w':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'w');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j, i + 1, boundary.y));
+                break;
+            }
+            case 'a':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'a');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j + 1, i, boundary.y));
+                break;
+            }
+            case 's':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 's');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j, i - 1, boundary.y));
+                break;
+            }
+            case 'd':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'd');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j - 1, i, boundary.y));
+                break;
+            }
+            } // switch (travelledDirection)
         }
+        else
+        {
+            SDL_Log("snakePartView.empty() is false!");
+            auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
+            SDL_assert(snakeBoundaryView.size() == 1);
+            const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
+            int i = currentSnakeHeadIndex.i, j = currentSnakeHeadIndex.j;
+            switch (travelledDirection)
+            {
+            case 'w':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'w');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j, ++i, boundary.y));
+                break;
+            }
+            case 'a':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'a');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(++j, i, boundary.y));
+                break;
+            }
+            case 's':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 's');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(j, --i, boundary.y));
+                break;
+            }
+            case 'd':
+            {
+                auto entitySnakePart = reg.create();
+                reg.emplace<SnakePart>(entitySnakePart, 'd');
+                reg.emplace<Position>(entitySnakePart, Util::from_indices(--j, i, boundary.y));
+                break;
+            }
+            } // switch (travelledDirection)
+            SDL_Log("Neck at map[%d][%d]!", i, j);
 
-        // auto snakeHeadView = reg.view<Position, SnakePartHead>();
-        // SDL_assert(snakeHeadView.storage<SnakePartHead>()->size() == 1);
-        // Position snakePos = reg.get<Position>(snakeHeadView.front());
-        // long xIndex, yIndex;
-        // Util::to_grid_cell(snakePos, &xIndex, &yIndex);
-
-        // for (;;)
-        // {
-        // }
+            if (!isAteApple)
+            {
+                SDL_Log("Attempting to destroy tail!");
+                // At this point, i and j are at the neck.
+                // So we just go to the opposite direction until
+                // we either hit a wall or empty space. When that happens,
+                // that is the body part we need to destroy.
+                auto traverseOppositeOfDirection = [](const char &c, int &i, int &j)
+                {
+                    SDL_Log("traverseOppositeOfDirection(%c, %d, %d)", c, i, j);
+                    switch (c)
+                    {
+                    case 'w':
+                        i++;
+                        break;
+                    case 'a':
+                        j++;
+                        break;
+                    case 's':
+                        i--;
+                        break;
+                    case 'd':
+                        j--;
+                        break;
+                    default:
+                        break;
+                    }
+                    return;
+                };
+                int previousI = i, previousJ = j;
+                auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                // SDL_Log("entity_ptr == nullptr = %d", entity_ptr == nullptr); // for some reason causes crash
+                while (entity_ptr != nullptr)
+                {
+                    previousI = i;
+                    previousJ = j;
+                    traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
+                    entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                }
+                entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
+                reg.destroy(*entity_ptr);
+                SDL_Log("Tail destroyed at map[%d][%d]!", previousI, previousJ);
+            }
+        }
     }
     static bool apple_update(entt::registry &reg)
     {
@@ -141,7 +305,7 @@ namespace SnakeGameplaySystem
             return;
 
         const bool ateApple = apple_update(reg);
-        // do_trailing(reg, ateApple);
+        do_trailing(reg, ateApple);
         // TODO: figure out what to do with headPart.previousPartDirection = 's'; if not useful, delete
 
         auto keyControlView = reg.view<KeyControl>();
@@ -181,8 +345,10 @@ namespace SnakeGameplaySystem
                     vel.y *= headPart.speedUpFactor;
                 break;
             case 'd':
+                SDL_Log("Case D entered:");
                 if (is_going_backwards(reg, 'd'))
                     break;
+                SDL_Log("is_going_backwards() is false");
                 vel.x = headPart.speed;
                 if (keyControl.isShiftKeyDown)
                     vel.x *= headPart.speedUpFactor;
@@ -273,19 +439,19 @@ namespace SnakeGameplaySystem
         case 'a':
             if (j == 0)
                 return false;
-            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+            if (map[i][j - 1] != MapSlotState::SNAKE_BODY)
                 return false;
             break;
         case 's':
             if (i == map.size() - 1)
                 return false;
-            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+            if (map[i + 1][j] != MapSlotState::SNAKE_BODY)
                 return false;
             break;
         case 'd':
             if (j == map[i].size() - 1)
                 return false;
-            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+            if (map[i][j + 1] != MapSlotState::SNAKE_BODY)
                 return false;
             break;
         default:

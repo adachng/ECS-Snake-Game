@@ -3,6 +3,7 @@ enable_testing()
 add_executable(main_test
     main_test.cpp
     translate_2d_test.cpp
+    snake_gameplay_system_test.cpp
     snake_gameplay_test.cpp
     enum_test.cpp
 )
