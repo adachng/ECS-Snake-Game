@@ -3,8 +3,8 @@
 
 struct KeyControl
 {
-    char lastMovementKeyDown;
     bool isShiftKeyDown;
+    char lastMovementKeyDown;
 }; // struct KeyControl
 
 #endif // SRC_COMPONENT_KEY_CONTROL_HPP

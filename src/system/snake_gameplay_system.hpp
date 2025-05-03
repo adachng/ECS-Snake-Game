@@ -1,32 +1,39 @@
 #ifndef SRC_SYSTEM_SNAKE_DISCRETE_VECTOR_HPP
 #define SRC_SYSTEM_SNAKE_DISCRETE_VECTOR_HPP
 
+#include <vector>
+
 #include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3/SDL_stdinc.h>
 #include <entt/entt.hpp>
 #include <sigslot/signal.hpp>
 
 #include <component/velocity.hpp>
 #include <component/key_control.hpp>
+#include <component/snake_apple.hpp>
 #include <component/snake_part.hpp>
 #include <component/snake_part_head.hpp>
 #include <component/snake_boundary_2d.hpp>
 
 namespace SnakeGameplaySystem
 {
-    enum MapSlotState
+    enum MapSlotState : Uint8
     {
-        EMPTY = 0b000,
-        SNAKE_HEAD = 0b001,
-        SNAKE_BODY = 0b010,
-        APPLE = 0b100,
-        ENUM_END = 0b111,
+        EMPTY = 0b0000U,
+        SNAKE_HEAD = 0b0001U,
+        SNAKE_BODY = 0b0010U,
+        APPLE = 0b0100U,
+
+        ENUM_END = 0b1111U,
     }; // enum MapSlotState
 
     namespace Util
     {
         static void to_grid_cell(const Position &pos, long *x, long *y)
         {
+            // value >= 0.0f and value < 1.0f is inside of 1
+            // if < 0.0f, it is 0; if >= 1.0f, it is 2
             if (x != nullptr)
             {
                 *x = SDL_lroundf(SDL_ceilf(pos.x));
@@ -40,14 +47,103 @@ namespace SnakeGameplaySystem
                     *y += 1L;
             }
         }
+        static void to_indices(const Position &pos, long *x, long *y, const long &sizeY)
+        {
+            to_grid_cell(pos, x, y);
+            *x = *x - 1;
+            *y = sizeY - *y;
+        }
+
+        static Position from_grid_cell(const long &x, const long &y)
+        {
+            Position ret;
+            ret.x = static_cast<float>(x) - 0.5f;
+            ret.y = static_cast<float>(y) - 0.5f;
+            return ret;
+        }
+        static Position from_indices(const long &x, const long &y, const long &sizeY)
+        {
+            return from_grid_cell(x + 1, sizeY - y);
+        }
     } // namespace Util
 
+    static std::vector<std::vector<MapSlotState>> get_map(entt::registry &reg);
     static bool is_game_success(entt::registry &reg);
+    static bool is_game_failure(entt::registry &reg);
+    static bool is_going_backwards(entt::registry &reg, const char &directionToGo);
+    static void do_trailing(entt::registry &reg, const bool &isAteApple)
+    { // NOTE: this function is the reason why the update loop NEEDS to limit DeltaTime
+        static auto previousMap = get_map(reg);
+        auto currentMap = get_map(reg);
+        if (currentMap == previousMap)
+            return;
+        auto snakePartView = reg.view<SnakePart>();
+        if (snakePartView.empty())
+        {
+        }
+
+        // auto snakeHeadView = reg.view<Position, SnakePartHead>();
+        // SDL_assert(snakeHeadView.storage<SnakePartHead>()->size() == 1);
+        // Position snakePos = reg.get<Position>(snakeHeadView.front());
+        // long xIndex, yIndex;
+        // Util::to_grid_cell(snakePos, &xIndex, &yIndex);
+
+        // for (;;)
+        // {
+        // }
+    }
+    static bool apple_update(entt::registry &reg)
+    {
+        auto map = get_map(reg);
+        struct Index
+        {
+            explicit Index(const int &_i, const int &_j) : i(_i), j(_j) {}
+            int i;
+            int j;
+        };
+        std::vector<Index> indexVec;
+        bool isEaten = false;
+        for (int i = 0; i < map.size(); i++)
+        {
+            for (int j = 0; j < map[i].size(); j++)
+            {
+                if (map[i][j] == MapSlotState::EMPTY)
+                    indexVec.push_back(Index(i, j));
+                else if ((map[i][j] & MapSlotState::SNAKE_HEAD) && (map[i][j] & MapSlotState::APPLE))
+                    isEaten = true;
+            }
+        }
+
+        auto appleView = reg.view<SnakeApple, Position>();
+        SDL_assert(appleView.storage<SnakeApple>()->size() <= 1);
+        if (!appleView.storage<SnakeApple>()->empty() && !indexVec.empty())
+        {
+            Position &applePos = reg.get<Position>(appleView.front());
+            const Sint32 indexVexIndex = SDL_rand(indexVec.size());
+            const int y = indexVec[indexVexIndex].i;
+            const int x = indexVec[indexVexIndex].j;
+
+            auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
+            SDL_assert(snakeBoundaryView.size() == 1);
+            const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
+            applePos = Util::from_indices(x, y, boundary.y);
+        }
+        else if (!appleView.storage<SnakeApple>()->empty())
+            reg.destroy(appleView.front());
+
+        return isEaten;
+    }
     static void iterate(entt::registry &reg)
     {
         if (is_game_success(reg))
             return;
-        // TODO: WIP
+        else if (is_game_failure(reg))
+            return;
+
+        const bool ateApple = apple_update(reg);
+        // do_trailing(reg, ateApple);
+        // TODO: figure out what to do with headPart.previousPartDirection = 's'; if not useful, delete
+
         auto keyControlView = reg.view<KeyControl>();
         SDL_assert(keyControlView.size() == 1);
         KeyControl keyControl = reg.get<KeyControl>(keyControlView.front());
@@ -61,19 +157,35 @@ namespace SnakeGameplaySystem
             switch (keyControl.lastMovementKeyDown)
             {
             case 'w':
+                if (is_going_backwards(reg, 'w'))
+                    break;
                 vel.x = 0.0f;
                 vel.y = headPart.speed;
+                if (keyControl.isShiftKeyDown)
+                    vel.y *= headPart.speedUpFactor;
                 break;
             case 'a':
+                if (is_going_backwards(reg, 'a'))
+                    break;
                 vel.x = -1.0f * headPart.speed;
+                if (keyControl.isShiftKeyDown)
+                    vel.x *= headPart.speedUpFactor;
                 vel.y = 0.0f;
                 break;
             case 's':
+                if (is_going_backwards(reg, 's'))
+                    break;
                 vel.x = 0.0f;
                 vel.y = -1.0f * headPart.speed;
+                if (keyControl.isShiftKeyDown)
+                    vel.y *= headPart.speedUpFactor;
                 break;
             case 'd':
+                if (is_going_backwards(reg, 'd'))
+                    break;
                 vel.x = headPart.speed;
+                if (keyControl.isShiftKeyDown)
+                    vel.x *= headPart.speedUpFactor;
                 vel.y = 0.0f;
                 break;
             default:
@@ -103,6 +215,139 @@ namespace SnakeGameplaySystem
         return ret;
     }
 
+    template <typename T = entt::entity>
+    static T *get_snake_body_at_indices(entt::registry &reg, const int &targetI, const int &targetJ, const int &sizeY)
+    {
+        T *ret = nullptr;
+
+        auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
+        SDL_assert(snakeBoundaryView.size() == 1);
+        const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
+
+        auto view = reg.view<Position, SnakePart>();
+        for (auto entity : view)
+        {
+            Position pos = reg.get<Position>(entity);
+            long i = -1L, j = -1L;
+            SnakeGameplaySystem::Util::to_indices(pos, &j, &i, boundary.y);
+            if (i == targetI && j == targetJ)
+            {
+                ret = &entity;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    static bool is_going_backwards(entt::registry &reg, const char &directionToGo)
+    {
+        struct Index
+        {
+            explicit Index(const int &_i, const int &_j) : i(_i), j(_j) {}
+            int i;
+            int j;
+            bool isInvalid() { return i < 0 || j < 0; }
+        };
+        auto map = get_map(reg);
+        Index indexOfSnakeHead(-1, -1);
+        for (int i = 0; i < map.size(); i++)
+        {
+            for (int j = 0; j < map[i].size(); j++)
+            {
+                if (map[i][j] == MapSlotState::SNAKE_HEAD)
+                    indexOfSnakeHead = Index(i, j);
+            }
+        }
+        if (indexOfSnakeHead.isInvalid())
+            return true;
+
+        int i = indexOfSnakeHead.i, j = indexOfSnakeHead.j;
+        switch (directionToGo)
+        { // check if it's a wall or not a snake body
+        case 'w':
+            if (i == 0)
+                return false;
+            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+                return false;
+            break;
+        case 'a':
+            if (j == 0)
+                return false;
+            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+                return false;
+            break;
+        case 's':
+            if (i == map.size() - 1)
+                return false;
+            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+                return false;
+            break;
+        case 'd':
+            if (j == map[i].size() - 1)
+                return false;
+            if (map[i - 1][j] != MapSlotState::SNAKE_BODY)
+                return false;
+            break;
+        default:
+            return true;
+        }
+
+        // It's a snake body at the directionToGo. Find out if it's
+        // the "neck". If it's not, return false.
+        auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
+        SDL_assert(snakeBoundaryView.size() == 1);
+        const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
+
+        auto view = reg.view<Position, SnakePart>();
+        for (auto &entity : view)
+        {
+            switch (directionToGo)
+            {
+            // Get the body part in that direction and get its currentDirection.
+            // If the currentDirection is opposite of directionToGo, return true.
+            case 'w':
+            {
+                auto *entity_ptr = get_snake_body_at_indices(reg, i - 1, j, boundary.y);
+                if (entity_ptr == nullptr)
+                    return false;
+                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 's')
+                    return true;
+                break;
+            }
+            case 'a':
+            {
+                auto *entity_ptr = get_snake_body_at_indices(reg, i, j - 1, boundary.y);
+                if (entity_ptr == nullptr)
+                    return false;
+                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'd')
+                    return true;
+                break;
+            }
+            case 's':
+            {
+                auto *entity_ptr = get_snake_body_at_indices(reg, i + 1, j, boundary.y);
+                if (entity_ptr == nullptr)
+                    return false;
+                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'w')
+                    return true;
+                break;
+            }
+            case 'd':
+            {
+                auto *entity_ptr = get_snake_body_at_indices(reg, i, j + 1, boundary.y);
+                if (entity_ptr == nullptr)
+                    return false;
+                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'a')
+                    return true;
+                break;
+            }
+            default:
+                return true;
+            }
+        }
+        return false;
+    }
+
     static std::vector<std::vector<MapSlotState>> get_map(entt::registry &reg)
     {
         auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
@@ -119,9 +364,8 @@ namespace SnakeGameplaySystem
         {
             const Position &pos = snakePartView.get<Position>(entity);
             long xIndex, yIndex;
-            SnakeGameplaySystem::Util::to_grid_cell(pos, &xIndex, &yIndex);
-            yIndex = boundary.y - yIndex;
-            ret[yIndex][xIndex - 1] = MapSlotState::SNAKE_BODY;
+            SnakeGameplaySystem::Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+            ret[yIndex][xIndex] = MapSlotState::SNAKE_BODY;
         }
 
         auto snakePartHeadView = reg.view<SnakePartHead, Position>();
@@ -129,9 +373,19 @@ namespace SnakeGameplaySystem
         {
             const Position &pos = snakePartView.get<Position>(entity);
             long xIndex, yIndex;
-            SnakeGameplaySystem::Util::to_grid_cell(pos, &xIndex, &yIndex);
-            yIndex = boundary.y - yIndex;
-            ret[yIndex][xIndex - 1] = MapSlotState::SNAKE_HEAD;
+            SnakeGameplaySystem::Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+            Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::SNAKE_HEAD;
+            ret[yIndex][xIndex] = static_cast<MapSlotState>(entry);
+        }
+
+        auto appleView = reg.view<SnakeApple, Position>();
+        for (auto entity : appleView)
+        {
+            const Position &pos = appleView.get<Position>(entity);
+            long xIndex, yIndex;
+            SnakeGameplaySystem::Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+            Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::APPLE;
+            ret[yIndex][xIndex] = static_cast<MapSlotState>(entry);
         }
 
         return ret;
@@ -139,7 +393,7 @@ namespace SnakeGameplaySystem
 
     static bool is_game_success(entt::registry &reg)
     {
-        std::vector<std::vector<MapSlotState>> map = get_map(reg);
+        auto map = get_map(reg);
         for (int i = 0; i < map.size(); i++)
         {
             for (int j = 0; j < map[i].size(); j++)
@@ -149,6 +403,25 @@ namespace SnakeGameplaySystem
             }
         }
         return true;
+    }
+
+    static bool is_game_failure(entt::registry &reg)
+    {
+        auto snakeHeadPos = reg.get<Position>(reg.view<SnakePartHead, Position>().front());
+        auto boundary = reg.get<SnakeBoundary2D>(reg.view<SnakeBoundary2D>().front());
+        if (snakeHeadPos.x < 0.0f || snakeHeadPos.x >= boundary.x || snakeHeadPos.y < 0.0f || snakeHeadPos.y >= boundary.y)
+            return true;
+
+        auto map = get_map(reg);
+        for (int i = 0; i < map.size(); i++)
+        {
+            for (int j = 0; j < map[i].size(); j++)
+            {
+                if ((static_cast<Uint8>(map[i][j]) & SNAKE_HEAD) && (static_cast<Uint8>(map[i][j]) & SNAKE_BODY))
+                    return true;
+            }
+        }
+        return false;
     }
 
     namespace Control
@@ -220,21 +493,15 @@ namespace SnakeGameplaySystem
             {
                 for (int j = 0; j < map[i].size(); j++)
                 {
-                    switch (map[i][j])
-                    {
-                    case SNAKE_HEAD:
-                        str += "$ ";
-                        break;
-                    case SNAKE_BODY:
-                        str += "x ";
-                        break;
-                    case APPLE:
-                        str += "@ ";
-                        break;
-                    default:
-                        str += ". ";
-                        break;
-                    }
+                    if (static_cast<Uint8>(map[i][j]) == EMPTY)
+                        str += ".";
+                    if (static_cast<Uint8>(map[i][j]) & SNAKE_HEAD)
+                        str += "$";
+                    if (static_cast<Uint8>(map[i][j]) & SNAKE_BODY)
+                        str += "x";
+                    if (static_cast<Uint8>(map[i][j]) & APPLE)
+                        str += "@";
+                    str += " "; // allows manual checking for collisions
                 }
                 str += "\n";
             }

@@ -50,44 +50,109 @@ namespace
         EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
     }
 
-    TEST(SnakeGameplaySystemTest, InvalidChangeDirection)
+    TEST(SnakeGameplaySystemTest, SpeedUpVelocity)
     {
-        // TODO: WIP
-        // entt::registry registry;
-        // auto entity = registry.create();
-        // registry.emplace<KeyControl>(entity);
-        // registry.emplace<DeltaTime>(entity, 5000U);
-        // registry.emplace<SnakeBoundary2D>(entity, 20, 20);
+        entt::registry registry;
+        auto entity = registry.create();
+        registry.emplace<KeyControl>(entity, false);
+        registry.emplace<DeltaTime>(entity, 5000U);
+        registry.emplace<SnakeBoundary2D>(entity, 20, 20);
 
-        // auto entitySnakeHead = registry.create();
-        // registry.emplace<Position>(entitySnakeHead, 10.0f, 10.0f);
-        // registry.emplace<Velocity>(entitySnakeHead, 0.0f, 0.0f);
-        // registry.emplace<SnakePartHead>(entitySnakeHead, 1.0f, 1.5f);
+        auto entitySnakeHead = registry.create();
+        registry.emplace<Position>(entitySnakeHead, 10.0f, 10.0f);
+        registry.emplace<Velocity>(entitySnakeHead, 0.0f, 0.0f);
+        registry.emplace<SnakePartHead>(entitySnakeHead, 1.23f, 1.5f);
 
-        // SnakeGameplaySystem::Control::up_key_down(registry);
-        // SnakeGameplaySystem::update(registry);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 1.0f);
+        SnakeGameplaySystem::Control::shift_key_up(registry);
+        SnakeGameplaySystem::Control::up_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 1.23f);
+        SnakeGameplaySystem::Control::shift_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 1.23f * 1.5f);
 
-        // SnakeGameplaySystem::Control::left_key_down(registry);
-        // SnakeGameplaySystem::update(registry);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, -1.0f);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
+        SnakeGameplaySystem::Control::shift_key_up(registry);
+        SnakeGameplaySystem::Control::left_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, -1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
+        SnakeGameplaySystem::Control::shift_key_down(registry);
+        SnakeGameplaySystem::Control::left_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, -1.23f * 1.5f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
 
-        // SnakeGameplaySystem::Control::down_key_down(registry);
-        // SnakeGameplaySystem::update(registry);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, -1.0f);
+        SnakeGameplaySystem::Control::shift_key_up(registry);
+        SnakeGameplaySystem::Control::down_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, -1.23f);
+        SnakeGameplaySystem::Control::shift_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 0.0f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, -1.23f * 1.5f);
 
-        // SnakeGameplaySystem::Control::right_key_down(registry);
-        // SnakeGameplaySystem::update(registry);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.0f);
-        // EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
+        SnakeGameplaySystem::Control::shift_key_up(registry);
+        SnakeGameplaySystem::Control::right_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
+        SnakeGameplaySystem::Control::shift_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f * 1.5f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 0.0f);
     }
 
-    TEST(SnakeGameplaySystemTest, ShiftKeySpeedUp)
+    TEST(SnakeGameplaySystemTest, InvalidChangeDirection)
     {
-        // TODO: WIP
+        entt::registry registry;
+        auto entity = registry.create();
+        registry.emplace<KeyControl>(entity);
+        registry.emplace<DeltaTime>(entity, 5000U);
+        registry.emplace<SnakeBoundary2D>(entity, 20, 20);
+
+        auto entitySnakeHead = registry.create();
+        registry.emplace<Position>(entitySnakeHead, 10.5f, 10.5f);
+        registry.emplace<Velocity>(entitySnakeHead, 1.23f, 4.56f);
+        registry.emplace<SnakePartHead>(entitySnakeHead, 1.0f, 1.5f);
+
+        auto entityBody1 = registry.create();
+        registry.emplace<Position>(entityBody1, 10.5f, 9.5f);
+        registry.emplace<SnakePart>(entityBody1, 'w');
+
+        auto entityBody2 = registry.create();
+        registry.emplace<Position>(entityBody2, 11.5f, 10.5f);
+        registry.emplace<SnakePart>(entityBody2, 'a');
+
+        auto entityBody3 = registry.create();
+        registry.emplace<Position>(entityBody3, 10.5f, 11.5f);
+        registry.emplace<SnakePart>(entityBody3, 's');
+
+        auto entityBody4 = registry.create();
+        registry.emplace<Position>(entityBody4, 9.5f, 10.5f);
+        registry.emplace<SnakePart>(entityBody4, 'd');
+
+        SnakeGameplaySystem::Control::up_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 4.56f);
+
+        SnakeGameplaySystem::Control::left_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 4.56f);
+
+        SnakeGameplaySystem::Control::down_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 4.56f);
+
+        SnakeGameplaySystem::Control::right_key_down(registry);
+        SnakeGameplaySystem::update(registry);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).x, 1.23f);
+        EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 4.56f);
     }
 
     TEST(SnakeGameplaySystemTest, DiscretisePosition)
@@ -121,7 +186,97 @@ namespace
         EXPECT_EQ(gridY, 6L);
     }
 
-    TEST(SnakeGameplaySystemTest, GetMap)
+    TEST(SnakeGameplaySystemTest, InverseDiscretisePosition)
+    {
+        Position pos;
+        long x, y;
+
+        y = x = 0;
+        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
+        EXPECT_FLOAT_EQ(pos.x, -0.5f);
+        EXPECT_FLOAT_EQ(pos.y, -0.5f);
+
+        y = x = -1;
+        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
+        EXPECT_FLOAT_EQ(pos.x, -1.5f);
+        EXPECT_FLOAT_EQ(pos.y, -1.5f);
+
+        y = x = 1;
+        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
+        EXPECT_FLOAT_EQ(pos.x, 0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 0.5f);
+
+        y = x = -2;
+        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
+        EXPECT_FLOAT_EQ(pos.x, -2.5f);
+        EXPECT_FLOAT_EQ(pos.y, -2.5f);
+
+        y = x = 2;
+        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
+        EXPECT_FLOAT_EQ(pos.x, 1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 1.5f);
+    }
+
+    TEST(SnakeGameplaySystemTest, FromIndices)
+    {
+        Position pos;
+        long x, y;
+
+        // 3-by-3 array. [0][1] is top-middle, [2][0] is bottom-left.
+
+        y = x = 0; // top-left
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 2.5f);
+
+        y = x = 1; // middle
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 1.5f);
+
+        y = x = 2; // bottom-right
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 2.5f);
+        EXPECT_FLOAT_EQ(pos.y, 0.5f);
+
+        x = 0;
+        y = 2; // bottom-left
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 0.5f);
+
+        x = 2;
+        y = 0; // top-right
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 2.5f);
+        EXPECT_FLOAT_EQ(pos.y, 2.5f);
+
+        x = 1;
+        y = 0; // center-top
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 2.5f);
+
+        x = 0;
+        y = 1; // center-left
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 1.5f);
+
+        x = 2;
+        y = 1; // center-right
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 2.5f);
+        EXPECT_FLOAT_EQ(pos.y, 1.5f);
+
+        x = 1;
+        y = 2; // center-bottom
+        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        EXPECT_FLOAT_EQ(pos.x, 1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 0.5f);
+    }
+
+    TEST(SnakeGameplaySystemUtilTest, GetMap)
     {
         entt::registry registry;
         auto entity = registry.create();
@@ -155,11 +310,6 @@ namespace
         makeBody(4.5f, 4.5f, 's');
         makeBody(5.5f, 4.5f, 'a');
 
-        // . . . . x x
-        // . . . . x .
-        // . x x x x .
-        // . x . . . .
-        // $ x . . . .
         using namespace SnakeGameplaySystem;
         std::vector<std::vector<MapSlotState>> comp(5, std::vector<MapSlotState>(6, MapSlotState::EMPTY));
         comp[4][0] = MapSlotState::SNAKE_HEAD;
@@ -173,9 +323,9 @@ namespace
         comp[0][4] = MapSlotState::SNAKE_BODY;
         comp[0][5] = MapSlotState::SNAKE_BODY;
 
-        EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
-
         // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+
+        EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
     }
 
     TEST(SnakeGameplaySystemTest, GameSuccess)
@@ -212,7 +362,8 @@ namespace
         EXPECT_TRUE(SnakeGameplaySystem::is_game_success(registry2));
     }
 
-    TEST(SnakeGameplaySystemTest, GameFailure)
-    {
-    }
+    // TEST(SnakeGameplaySystemTest, GameFailure)
+    // {
+    // TODO: WIP
+    // }
 } // namespace
