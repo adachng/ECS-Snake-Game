@@ -11,7 +11,7 @@
 
 namespace
 {
-    TEST(SnakeGameplaySystemTest, TrailingWithoutApple)
+    TEST(SnakeGameplaySystemTest, TrailingOrthogonallyWithoutApple)
     {
         entt::registry registry;
         { // create game state entity; 3x1 map
@@ -47,7 +47,49 @@ namespace
         EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
     }
 
-    TEST(SnakeGameplaySystemTest, TrailingWithApple)
+    TEST(SnakeGameplaySystemTest, TrailingDiagonallyWithoutApple)
+    {
+        entt::registry registry;
+        { // create game state entity; 2x2 map
+            auto entity = registry.create();
+            registry.emplace<KeyControl>(entity, 'w');
+            registry.emplace<DeltaTime>(entity, 100U);
+            registry.emplace<SnakeBoundary2D>(entity, 2, 2);
+        }
+        { // create snake head
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 1.5f, 0.5f);
+            registry.emplace<Velocity>(entity, 0.0f, 0.0f);
+            registry.emplace<SnakePartHead>(entity, 10.0f, 1.0f); // 10 /s speed
+        }
+        { // create snake body
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 0.5f, 0.5f);
+            registry.emplace<SnakePart>(entity, 'd');
+        }
+
+        SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+
+        SDL_Log("First update:");
+        SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
+        SystemTranslate2D::update(registry);   // 0.1s has passed
+        SDL_Log("Second update:");
+        SnakeGameplaySystem::update(registry);
+
+        using namespace SnakeGameplaySystem;
+        std::vector<std::vector<MapSlotState>> comp(2, std::vector<MapSlotState>(2, MapSlotState::EMPTY));
+        comp[0][1] = MapSlotState::SNAKE_HEAD;
+        comp[1][1] = MapSlotState::SNAKE_BODY;
+
+        SDL_Log("turn 2 =");                                                           // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        SDL_Log("comp =");                                                             // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
+        EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
+    }
+
+    TEST(SnakeGameplaySystemTest, TrailingOrthogonallyWithApple)
     {
         entt::registry registry;
         { // create game state entity; 4x1 map
@@ -93,6 +135,53 @@ namespace
         // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
         // SnakeGameplaySystem::Debug::print_snake_head_pos(registry);                    // NOTE: toggle to see
         // SnakeGameplaySystem::Debug::print_snake_head_vel(registry);                    // NOTE: toggle to see
+        // SDL_Log("comp =");                                                             // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
+        EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
+    }
+
+    TEST(SnakeGameplaySystemTest, TrailingDiagonallyWithApple)
+    {
+        entt::registry registry;
+        { // create game state entity; 2x2 map
+            auto entity = registry.create();
+            registry.emplace<KeyControl>(entity, 'w');
+            registry.emplace<DeltaTime>(entity, 100U);
+            registry.emplace<SnakeBoundary2D>(entity, 2, 2);
+        }
+        { // create apple
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 1.5f, 1.5f);
+            registry.emplace<SnakeApple>(entity);
+        }
+        { // create snake head
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 1.5f, 0.5f);
+            registry.emplace<Velocity>(entity, 0.0f, 0.0f);
+            registry.emplace<SnakePartHead>(entity, 10.0f, 1.0f); // 10 /s speed
+        }
+        { // create snake body
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 0.5f, 0.5f);
+            registry.emplace<SnakePart>(entity, 'd');
+        }
+
+        // SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+
+        SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
+        SystemTranslate2D::update(registry);   // 0.1s has passed
+        SnakeGameplaySystem::update(registry);
+
+        using namespace SnakeGameplaySystem;
+        std::vector<std::vector<MapSlotState>> comp(2, std::vector<MapSlotState>(2, MapSlotState::EMPTY));
+        comp[0][1] = MapSlotState::SNAKE_HEAD;
+        comp[1][1] = MapSlotState::SNAKE_BODY;
+        comp[1][0] = MapSlotState::SNAKE_BODY;
+        comp[0][0] = MapSlotState::APPLE;
+
+        // SDL_Log("turn 2 =");                                                           // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
         // SDL_Log("comp =");                                                             // NOTE: toggle to see
         // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
         EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
