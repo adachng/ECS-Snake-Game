@@ -236,15 +236,84 @@ namespace SnakeGameplaySystem
                     return;
                 };
                 int previousI = i, previousJ = j;
-                auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
-                while (entity_ptr != nullptr)
+                auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y); // currently neck entity
+                bool isEndFound = false;
+                while (!isEndFound)
                 {
-                    previousI = i;
-                    previousJ = j;
-                    traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
-                    entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                    isEndFound = true;
+                    while (entity_ptr != nullptr)
+                    {
+                        previousI = i;
+                        previousJ = j;
+                        traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
+                        entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                    }
+                    i = previousI, j = previousJ;
+                    entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y); // maybe end, maybe corner
+
+                    switch (reg.get<SnakePart>(*entity_ptr).currentDirection) // handle corners here
+                    {
+                    case 'w': // check left and right
+                    case 's': // check left and right
+                    {
+                        bool isNextBodyAtLeft = false;
+                        bool isNextBodyAtRight = false;
+                        if (j > 0) // check left first
+                        {
+                            const int targetI = i, targetJ = j - 1;
+                            entity_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            if (entity_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*entity_ptr) &&
+                                reg.get<SnakePart>(*entity_ptr).currentDirection == 'd')
+                                isNextBodyAtLeft = true;
+                        }
+                        if (!isNextBodyAtLeft && j < currentMap[0].size() - 1) // check right
+                        {
+                            const int targetI = i, targetJ = j + 1;
+                            entity_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            if (entity_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*entity_ptr) &&
+                                reg.get<SnakePart>(*entity_ptr).currentDirection == 'a')
+                                isNextBodyAtRight = true;
+                        }
+                        SDL_assert(!(isNextBodyAtLeft && isNextBodyAtRight));
+                        if (isNextBodyAtLeft || isNextBodyAtRight)
+                            isEndFound = false;
+                        break;
+                    }
+                    case 'a': // check up and down
+                    case 'd': // check up and down
+                    {
+                        bool isNextBodyAtAbove = false;
+                        bool isNextBodyAtBelow = false;
+                        if (i > 0) // check up first
+                        {
+                            const int targetI = i - 1, targetJ = j;
+                            entity_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            if (entity_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*entity_ptr) &&
+                                reg.get<SnakePart>(*entity_ptr).currentDirection == 's')
+                                isNextBodyAtAbove = true;
+                        }
+                        else if (i < currentMap.size() - 1) // check down
+                        {
+                            const int targetI = i + 1, targetJ = j;
+                            entity_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            if (entity_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*entity_ptr) &&
+                                reg.get<SnakePart>(*entity_ptr).currentDirection == 'w')
+                                isNextBodyAtBelow = true;
+                        }
+                        SDL_assert(!(isNextBodyAtAbove && isNextBodyAtBelow));
+                        if (isNextBodyAtAbove || isNextBodyAtBelow)
+                            isEndFound = false;
+                        break;
+                    }
+                    default:
+                        SDL_assert(false);
+                        break;
+                    }
                 }
-                entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
                 reg.destroy(*entity_ptr);
             }
         }
