@@ -32,6 +32,7 @@ namespace
             registry.emplace<SnakePart>(entity, 'd');
         }
 
+        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
         SnakeGameplaySystem::update(registry);
@@ -41,9 +42,9 @@ namespace
         comp[0][2] = MapSlotState::SNAKE_HEAD;
         comp[0][1] = MapSlotState::SNAKE_BODY;
 
-        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
-        // SDL_Log("comp =");                                                             // NOTE: toggle to see
-        // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        SDL_Log("comp =");                                                             // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
         EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
     }
 

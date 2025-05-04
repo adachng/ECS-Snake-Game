@@ -76,8 +76,13 @@ namespace SnakeGameplaySystem
     static bool is_game_success(entt::registry &reg);
     static bool is_game_failure(entt::registry &reg);
     static bool is_going_backwards(entt::registry &reg, const char &directionToGo);
+    namespace Debug
+    {
+        static void print_map(const std::vector<std::vector<MapSlotState>> &map);
+    }
     static void do_trailing(entt::registry &reg, const bool &isAteApple)
     { // NOTE: this function is the reason why the update loop NEEDS to limit DeltaTime
+        SDL_Log("\ndo_trailing() START");
         auto currentMap = get_map(reg);
         static auto previousMap = get_map(reg); // TODO: static is not good for different source file usage
         if (currentMap == previousMap)
@@ -106,6 +111,8 @@ namespace SnakeGameplaySystem
 
         Index previousSnakeHeadIndex = getSnakeHeadIndices(previousMap);
         Index currentSnakeHeadIndex = getSnakeHeadIndices(currentMap);
+        SDL_Log("do_trailing(): previous snake head is at (%d,%d)", previousSnakeHeadIndex.i, previousSnakeHeadIndex.j);
+        SDL_Log("do_trailing(): current snake head is at (%d,%d)", currentSnakeHeadIndex.i, currentSnakeHeadIndex.j);
 
         if (previousSnakeHeadIndex.i == currentSnakeHeadIndex.i && previousSnakeHeadIndex.j == currentSnakeHeadIndex.j)
         {
@@ -133,7 +140,7 @@ namespace SnakeGameplaySystem
         {
             if (!isAteApple)
                 return;
-
+            // Case where snake eats apple for first time.
             auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
             SDL_assert(snakeBoundaryView.size() == 1);
             const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
@@ -208,44 +215,147 @@ namespace SnakeGameplaySystem
             }
             } // switch (travelledDirection)
 
+            SDL_Log("do_trailing(): neck spawned at map[%d][%d]!", i, j);
             if (!isAteApple)
             {
                 // At this point, i and j are at the neck.
                 // So we just go to the opposite direction until
                 // we either hit a wall or empty space. When that happens,
                 // that is the body part we need to destroy.
-                auto traverseOppositeOfDirection = [](const char &c, int &i, int &j)
-                {
-                    switch (c)
+                // auto traverseOppositeOfDirection = [](const char &c, int &i, int &j)
+                // {
+                //     switch (c)
+                //     {
+                //     case 'w':
+                //         i++;
+                //         break;
+                //     case 'a':
+                //         j++;
+                //         break;
+                //     case 's':
+                //         i--;
+                //         break;
+                //     case 'd':
+                //         j--;
+                //         break;
+                //     default:
+                //         break;
+                //     }
+                //     return;
+                // };
+                auto deleteTailEndTracingFromNeck = [](entt::registry &reg, const SnakeBoundary2D boundary, const int &neckI, const int &neckJ, const int &mapOuterSize, const int &mapInnerSize) { // run this before deleting neck
+                    auto *entity_ptr = get_snake_body_at_indices(reg, neckI, neckJ, boundary.y);
+                    if (entity_ptr == nullptr || !reg.all_of<SnakePart, Position>(*entity_ptr))
+                        return;
+                    int i = neckI, j = neckJ;
+                    while (true)
                     {
-                    case 'w':
-                        i++;
-                        break;
-                    case 'a':
-                        j++;
-                        break;
-                    case 's':
-                        i--;
-                        break;
-                    case 'd':
-                        j--;
-                        break;
-                    default:
-                        break;
+                        bool hasFoundNextPart = false;
+                        SDL_Log("Start of while loop: i = %d, j = %d, hasFoundNextPart = %d", i, j, hasFoundNextPart);
+                        if (!hasFoundNextPart && i != 0) // check if above body part is pointing down
+                        {
+                            const int targetI = i - 1, targetJ = j;
+                            SDL_Log("Getting temp_ptr");
+                            auto *temp_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            SDL_Log("Checking if above body part is pointing down");
+                            if (temp_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*temp_ptr) &&
+                                reg.get<SnakePart>(*temp_ptr).currentDirection == 's')
+                            {
+                                SDL_Log("TRUE!");
+                                entity_ptr = temp_ptr;
+                                hasFoundNextPart = true;
+                                i = targetI;
+                                j = targetJ;
+                            }
+                        }
+                        if (!hasFoundNextPart && j != 0) // check if left body part is pointing right
+                        {
+                            const int targetI = i, targetJ = j - 1;
+                            SDL_Log("Getting temp_ptr");
+                            auto *temp_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            SDL_Log("Checking if left body part is pointing right");
+                            if (temp_ptr != nullptr) // ASSERTING
+                            {
+                                const bool isBodyPart = reg.all_of<SnakePart, Position>(*temp_ptr);
+                                reg.destroy(*temp_ptr);
+                                SDL_Log("targetI = %d, targetJ = %d", targetI, targetJ);
+                                SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(reg)); // NOTE: toggle to see
+                                SDL_assert(isBodyPart);
+                            }
+                            if (temp_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*temp_ptr) &&
+                                reg.get<SnakePart>(*temp_ptr).currentDirection == 'd')
+                            {
+                                SDL_Log("TRUE!");
+                                entity_ptr = temp_ptr;
+                                hasFoundNextPart = true;
+                                i = targetI;
+                                j = targetJ;
+                            }
+                        }
+                        if (!hasFoundNextPart && i != mapOuterSize - 1) // check if below body part is pointing up
+                        {
+                            const int targetI = i + 1, targetJ = j;
+                            SDL_Log("Getting temp_ptr");
+                            auto *temp_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            SDL_Log("Checking if below body part is pointing up");
+                            if (temp_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*temp_ptr) &&
+                                reg.get<SnakePart>(*temp_ptr).currentDirection == 'w')
+                            {
+                                SDL_Log("TRUE!");
+                                entity_ptr = temp_ptr;
+                                hasFoundNextPart = true;
+                                i = targetI;
+                                j = targetJ;
+                            }
+                        }
+                        if (!hasFoundNextPart && j != mapInnerSize - 1) // check if right body part is pointing left
+                        {
+                            const int targetI = i, targetJ = j + 1;
+                            SDL_Log("Getting temp_ptr");
+                            auto *temp_ptr = get_snake_body_at_indices(reg, targetI, targetJ, boundary.y);
+                            SDL_Log("Checking if right body part is pointing left");
+                            if (temp_ptr != nullptr &&
+                                reg.all_of<SnakePart, Position>(*temp_ptr) &&
+                                reg.get<SnakePart>(*temp_ptr).currentDirection == 'd')
+                            {
+                                SDL_Log("TRUE!");
+                                entity_ptr = temp_ptr;
+                                hasFoundNextPart = true;
+                                i = targetI;
+                                j = targetJ;
+                            }
+                        }
+                        SDL_Log("End of while loop: i = %d, j = %d, hasFoundNextPart = %d", i, j, hasFoundNextPart);
+                        if (!hasFoundNextPart)
+                            break;
+                    } // while
+                    SDL_assert(entity_ptr != nullptr);
+                    if (entity_ptr != nullptr)
+                    {
+                        SDL_Log("\tdo_trailing(): Destroying tail at (%d,%d)", i, j);
+                        reg.destroy(*entity_ptr);
+                        SDL_Log("\tdo_trailing(): Destroyed tail at (%d,%d)", i, j);
                     }
                     return;
                 };
-                int previousI = i, previousJ = j;
-                auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
-                while (entity_ptr != nullptr)
-                {
-                    previousI = i;
-                    previousJ = j;
-                    traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
-                    entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
-                }
-                entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
-                reg.destroy(*entity_ptr);
+                // int previousI = i, previousJ = j;
+                // auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                // while (entity_ptr != nullptr)
+                // {
+                //     previousI = i;
+                //     previousJ = j;
+                //     traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
+                //     entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                // }
+                // entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
+                // reg.destroy(*entity_ptr);
+                deleteTailEndTracingFromNeck(reg, boundary, i, j, currentMap.size(), boundary.y);
+                SDL_assert(currentMap.size() > 0);
+                SDL_assert(boundary.y == currentMap[0].size());
+                Debug::print_map(SnakeGameplaySystem::get_map(reg));
             }
         }
     }
@@ -416,7 +526,7 @@ namespace SnakeGameplaySystem
             Position pos = reg.get<Position>(entity);
             long i = -1L, j = -1L;
             SnakeGameplaySystem::Util::to_indices(pos, &j, &i, boundary.y);
-            if (i == targetI && j == targetJ)
+            if (i == targetI && j == targetJ && reg.all_of<SnakePart, Position>(entity))
             {
                 ret = &entity;
                 break;
