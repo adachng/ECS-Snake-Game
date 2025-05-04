@@ -364,6 +364,34 @@ namespace
 
     TEST(SnakeGameplaySystemTest, GameFailure)
     {
-        // TODO: WIP
+        entt::registry registry1; // 2x1 map with snake head at out-of-bounds
+        {
+            auto entity = registry1.create();
+            registry1.emplace<KeyControl>(entity, 'a');
+            registry1.emplace<DeltaTime>(entity, 100U);
+            registry1.emplace<SnakeBoundary2D>(entity, 2, 1);
+
+            auto entitySnakeHead = registry1.create();
+            registry1.emplace<Position>(entitySnakeHead, -1.5f, -1.5f);
+            registry1.emplace<SnakePartHead>(entitySnakeHead, 10.0f, 1.0f);
+        }
+        EXPECT_TRUE(SnakeGameplaySystem::is_game_failure(registry1));
+
+        entt::registry registry2; // 2x1 map with snake head + body at left
+        {
+            auto entity = registry2.create();
+            registry2.emplace<KeyControl>(entity, 'a');
+            registry2.emplace<DeltaTime>(entity, 100U);
+            registry2.emplace<SnakeBoundary2D>(entity, 2, 1);
+
+            auto entitySnakeHead = registry2.create();
+            registry2.emplace<Position>(entitySnakeHead, 0.5f, 0.5f);
+            registry2.emplace<SnakePartHead>(entitySnakeHead, 10.0f, 1.0f);
+
+            auto entitySnakeBody = registry2.create();
+            registry2.emplace<Position>(entitySnakeBody, 0.5f, 0.5f);
+            registry2.emplace<SnakePart>(entitySnakeBody, 'w');
+        }
+        EXPECT_TRUE(SnakeGameplaySystem::is_game_failure(registry2));
     }
 } // namespace

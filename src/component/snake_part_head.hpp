@@ -5,7 +5,6 @@ struct SnakePartHead
 {
     float speed;
     float speedUpFactor;
-    char previousPartDirection; // 'w', 'a', 's', or 'd'
 }; // struct SnakePartHead
 
 #endif // SRC_COMPONENT_SNAKE_PART_HEAD_HPP
