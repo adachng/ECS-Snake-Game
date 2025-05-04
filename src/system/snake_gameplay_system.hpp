@@ -172,7 +172,6 @@ namespace SnakeGameplaySystem
         }
         else
         {
-            SDL_Log("snakePartView.empty() is false!");
             auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
             SDL_assert(snakeBoundaryView.size() == 1);
             const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
@@ -208,18 +207,15 @@ namespace SnakeGameplaySystem
                 break;
             }
             } // switch (travelledDirection)
-            SDL_Log("Neck at map[%d][%d]!", i, j);
 
             if (!isAteApple)
             {
-                SDL_Log("Attempting to destroy tail!");
                 // At this point, i and j are at the neck.
                 // So we just go to the opposite direction until
                 // we either hit a wall or empty space. When that happens,
                 // that is the body part we need to destroy.
                 auto traverseOppositeOfDirection = [](const char &c, int &i, int &j)
                 {
-                    SDL_Log("traverseOppositeOfDirection(%c, %d, %d):", c, i, j);
                     switch (c)
                     {
                     case 'w':
@@ -250,7 +246,6 @@ namespace SnakeGameplaySystem
                 }
                 entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
                 reg.destroy(*entity_ptr);
-                SDL_Log("Tail destroyed at map[%d][%d]!", previousI, previousJ);
             }
         }
     }
@@ -274,11 +269,9 @@ namespace SnakeGameplaySystem
                 else if ((map[i][j] & MapSlotState::SNAKE_HEAD) && (map[i][j] & MapSlotState::APPLE))
                 {
                     isEaten = true;
-                    SDL_Log("Apple is eaten!");
                 }
             }
         }
-        SDL_Log("isEaten = %d", isEaten);
         do_trailing(reg, isEaten);
 
         auto respawnApple = [](entt::registry &reg, const std::vector<Index> &indexVec)
@@ -311,16 +304,13 @@ namespace SnakeGameplaySystem
             map = get_map(reg);
 
             bool hasErased = false;
-            SDL_Log("indexVec:");
             for (auto it = indexVec.begin(); it != indexVec.end();) // search for conflicting spots since the head was detached
             {                                                       // solves apple at neck issue
                 Index index = *it;
-                SDL_Log("\tIndex(%d,%d)", index.i, index.j);
                 if ((map[index.i][index.j] & MapSlotState::APPLE) && map[index.i][index.j] > MapSlotState::APPLE)
                 {
                     hasErased = true;
                     it = indexVec.erase(it); // erase() returns iterator to next element
-                    SDL_Log("\tErased Index(%d,%d)", index.i, index.j);
                 }
                 else
                     ++it;
@@ -335,10 +325,8 @@ namespace SnakeGameplaySystem
     {
         if (is_game_success(reg))
             return;
-        SDL_Log("A");
         if (is_game_failure(reg))
             return;
-        SDL_Log("B");
 
         const bool ateApple = apple_update(reg);
 
@@ -379,10 +367,8 @@ namespace SnakeGameplaySystem
                     vel.y *= headPart.speedUpFactor;
                 break;
             case 'd':
-                SDL_Log("Case d entered!");
                 if (is_going_backwards(reg, 'd'))
                     break;
-                SDL_Log("Is going to valid!");
                 vel.x = headPart.speed;
                 if (keyControl.isShiftKeyDown)
                     vel.x *= headPart.speedUpFactor;
