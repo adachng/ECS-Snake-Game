@@ -561,9 +561,11 @@ namespace SnakeGameplaySystem
             const Position &pos = snakePartView.get<Position>(entity);
             long xIndex, yIndex;
             SnakeGameplaySystem::Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
-            Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::SNAKE_HEAD;
             if (xIndex >= 0 && yIndex >= 0 && yIndex < ret.size() && xIndex < ret[yIndex].size())
+            {
+                Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::SNAKE_HEAD;
                 ret[yIndex][xIndex] = static_cast<MapSlotState>(entry);
+            }
         }
 
         auto appleView = reg.view<SnakeApple, Position>();
@@ -572,9 +574,11 @@ namespace SnakeGameplaySystem
             const Position &pos = appleView.get<Position>(entity);
             long xIndex, yIndex;
             SnakeGameplaySystem::Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
-            Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::APPLE;
             if (xIndex >= 0 && yIndex >= 0 && yIndex < ret.size() && xIndex < ret[yIndex].size())
+            {
+                Uint8 entry = static_cast<Uint8>(ret[yIndex][xIndex]) | MapSlotState::APPLE;
                 ret[yIndex][xIndex] = static_cast<MapSlotState>(entry);
+            }
         }
 
         return ret;
