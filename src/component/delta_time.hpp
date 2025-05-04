@@ -5,7 +5,7 @@
 
 struct DeltaTime
 {
-    Uint32 dt_ms;
+    Uint64 dt_ms;
 }; // struct DeltaTime
 
 #endif // SRC_COMPONENT_DELTA_TIME_HPP
