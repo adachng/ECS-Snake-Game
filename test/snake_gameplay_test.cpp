@@ -68,13 +68,13 @@ namespace
             registry.emplace<SnakePart>(entity, 'd');
         }
 
-        SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        // SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
 
-        SDL_Log("First update:");
+        // SDL_Log("First update:");
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
-        SDL_Log("Second update:");
+        // SDL_Log("Second update:");
         SnakeGameplaySystem::update(registry);
 
         using namespace SnakeGameplaySystem;
@@ -82,10 +82,10 @@ namespace
         comp[0][1] = MapSlotState::SNAKE_HEAD;
         comp[1][1] = MapSlotState::SNAKE_BODY;
 
-        SDL_Log("turn 2 =");                                                           // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
-        SDL_Log("comp =");                                                             // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
+        // SDL_Log("turn 2 =");                                                           // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        // SDL_Log("comp =");                                                             // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
         EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
     }
 
