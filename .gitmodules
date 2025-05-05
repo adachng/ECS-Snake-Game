@@ -7,3 +7,6 @@
 [submodule "third_party/sigslot"]
 	path = third_party/sigslot
 	url = https://github.com/palacaze/sigslot
+[submodule "third_party/SDL_ttf"]
+	path = third_party/SDL_ttf
+	url = https://github.com/libsdl-org/SDL_ttf

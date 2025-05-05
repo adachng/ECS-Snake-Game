@@ -18,6 +18,12 @@ This software uses third-party libraries provided 'as-is'. See individual licens
 **License:** zlib License (see [license/SDL.txt](license/SDL.txt))<br>
 **Usage:** Application window management and input handling.
 
+### [SDL_ttf](https://github.com/libsdl-org/SDL_ttf) ([3.2.2](https://github.com/libsdl-org/SDL_ttf/releases/tag/release-3.2.2))
+
+**Copyright:** © 1997-2025 Sam Lantinga<br>
+**License:** zlib License (see [license/SDL_ttf.txt](license/SDL_ttf.txt))<br>
+**Usage:** Gameplay visuals.
+
 ### [EnTT](https://github.com/skypjack/entt) ([EnTT v3.15.0](https://github.com/skypjack/entt/releases/tag/v3.15.0))
 
 **Copyright:** © 2017-2025 Michele Caini<br>
