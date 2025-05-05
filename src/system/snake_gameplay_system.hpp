@@ -445,7 +445,7 @@ namespace SnakeGameplaySystem
         return ret;
     }
 
-    template <typename T = entt::entity>
+    template <typename T>
     static T *get_snake_body_at_indices(entt::registry &reg, const int &targetI, const int &targetJ, const int &sizeY)
     {
         T *ret = nullptr;
