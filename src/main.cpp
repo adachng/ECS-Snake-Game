@@ -31,9 +31,9 @@ struct AppState
 
 namespace Global
 {
-    static constexpr float SPEED = 1.0f;
-    static constexpr float SPEED_UP_FACTOR = 3.0f;
-    static constexpr float TICK_UNIT_TRAVELLED = 0.25f; // MUST BE <= 0.5f
+    static constexpr float SPEED = 2.0f;
+    static constexpr float SPEED_UP_FACTOR = 5.0f;
+    static constexpr float TICK_UNIT_TRAVELLED = 0.25f; // MUST BE <= 0.5f, see Nyquist-Shannon sampling theorem
     static constexpr int MAP_WIDTH = 20;                // MUST BE >= 1
     static constexpr int MAP_HEIGHT = 20;               // MUST BE >= 1
 
@@ -62,7 +62,7 @@ void init_gameplay_scene(entt::registry &reg)
     auto snakeHeadEntity = reg.create();
     reg.emplace<Position>(snakeHeadEntity, 0.5f, 0.5f);
     reg.emplace<Velocity>(snakeHeadEntity, 0.0f, 0.0f);
-    reg.emplace<SnakePartHead>(snakeHeadEntity, 1.0f, 1.5f);
+    reg.emplace<SnakePartHead>(snakeHeadEntity, Global::SPEED, Global::SPEED_UP_FACTOR);
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
@@ -126,8 +126,12 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
         SDL_Log("\033[2J\033[H");
         SDL_Log("current map at t = %lums", now);
+        if (SnakeGameplaySystem::is_speeding_up(Global::reg))
+            SDL_Log("SPED UP! Snake's velocity.x = %f, .y = %f", SnakeGameplaySystem::Debug::get_snake_head_velocity(Global::reg).x, SnakeGameplaySystem::Debug::get_snake_head_velocity(Global::reg).y);
         SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(Global::reg));
+        SDL_Log("Score: %ld", SnakeGameplaySystem::get_score(Global::reg));
     }
+    SDL_Delay(Global::DESIRED_TICK_PERIOD_MS / 4U);
 
     return SDL_APP_CONTINUE;
 }

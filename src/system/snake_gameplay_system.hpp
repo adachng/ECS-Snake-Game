@@ -661,6 +661,7 @@ namespace SnakeGameplaySystem
     }
 
     static long get_score(entt::registry &reg) { return reg.view<SnakePart>().size(); }
+    static bool is_speeding_up(entt::registry &reg) { return reg.get<KeyControl>(reg.view<KeyControl>().front()).isShiftKeyDown; }
 
     namespace Control
     {
