@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include <entt/entt.hpp>
 #include <sigslot/signal.hpp>
@@ -162,7 +163,29 @@ static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL
     }
 
     const float textY = mapBoundaryBox.y + mapBoundaryBox.h + 10.0f;
-    if (!SDL_RenderDebugTextFormat(renderer, mapBoundaryBox.x, textY, "Score: %lu", SnakeGameplaySystem::get_score(reg)))
+    std::string textContent;
+    if (SnakeGameplaySystem::is_game_success(reg))
+    {
+        if (!SDL_SetRenderDrawColor(renderer, 0U, 255U, 0U, SDL_ALPHA_OPAQUE))
+        {
+            std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+            return false;
+        }
+        textContent = "Congratulations! You won! Press R to restart. Score: %lu";
+    }
+    else if (SnakeGameplaySystem::is_game_failure(reg))
+    {
+        if (!SDL_SetRenderDrawColor(renderer, 255U, 0U, 0U, SDL_ALPHA_OPAQUE))
+        {
+            std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+            return false;
+        }
+        textContent = "Game over! Press R to restart. Score: %lu";
+    }
+    else
+        textContent = "Score: %lu";
+
+    if (!SDL_RenderDebugTextFormat(renderer, mapBoundaryBox.x, textY, textContent.c_str(), SnakeGameplaySystem::get_score(reg)))
     {
         std::cerr << "SDL_RenderDebugTextFormat error: " << SDL_GetError() << std::endl;
         return false;
@@ -179,6 +202,7 @@ static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL
 
 static void init_gameplay_scene(entt::registry &reg)
 {
+    reg.clear();
     auto gameStateEntity = reg.create();
     reg.emplace<DeltaTime>(gameStateEntity, Global::DESIRED_TICK_PERIOD_MS);
     reg.emplace<KeyControl>(gameStateEntity, 'd', false);
@@ -192,9 +216,9 @@ static void init_gameplay_scene(entt::registry &reg)
 
     auto snakeHeadEntity = reg.create();
     if (centerY >= 1.5f)
-        reg.emplace<Position>(snakeHeadEntity, 0.5f, centerY - 1.0f);
+        reg.emplace<Position>(snakeHeadEntity, 2.5f, centerY - 1.0f);
     else
-        reg.emplace<Position>(snakeHeadEntity, 0.5f, 0.5f);
+        reg.emplace<Position>(snakeHeadEntity, 2.5f, 0.5f);
     reg.emplace<Velocity>(snakeHeadEntity, 0.0f, 0.0f);
     reg.emplace<SnakePartHead>(snakeHeadEntity, Global::SPEED, Global::SPEED_UP_FACTOR);
 }
@@ -252,13 +276,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         // The reason why is because of how the body follows the head.
         // It is dependent on body entites 2 blocks away in 4 directions from head.
         // If system lags, the head may get detached if deltaTime is not fixed.
-        Global::gameplayUpdateSig(Global::reg);
+        if (!SnakeGameplaySystem::is_game_success(Global::reg) && !SnakeGameplaySystem::is_game_failure(Global::reg))
+            Global::gameplayUpdateSig(Global::reg); // effectively pauses game if failed or succeeded
         appstateCasted->previousTick += Global::DESIRED_TICK_PERIOD_MS;
-
-        if (SnakeGameplaySystem::is_game_success(Global::reg))
-            SDL_assert_release(true && false && "GAME WON"); // TODO
-        else if (SnakeGameplaySystem::is_game_failure(Global::reg))
-            SDL_assert_release(false && false && "GAME FAILED"); // TODO
 
         static auto previousMap = SnakeGameplaySystem::get_map(Global::reg);
         auto currentMap = SnakeGameplaySystem::get_map(Global::reg);
@@ -306,6 +326,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         case SDL_SCANCODE_SPACE:
             SnakeGameplaySystem::Control::shift_key_down(Global::reg);
             break;
+        case SDL_SCANCODE_R:
+            if (SnakeGameplaySystem::is_game_failure(Global::reg) || SnakeGameplaySystem::is_game_success(Global::reg))
+                init_gameplay_scene(Global::reg);
         default:
             break;
         }
