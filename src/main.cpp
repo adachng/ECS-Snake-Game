@@ -288,15 +288,19 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         case SDL_SCANCODE_ESCAPE:
             return SDL_APP_SUCCESS;
         case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
             SnakeGameplaySystem::Control::up_key_down(Global::reg);
             break;
         case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
             SnakeGameplaySystem::Control::left_key_down(Global::reg);
             break;
         case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
             SnakeGameplaySystem::Control::down_key_down(Global::reg);
             break;
         case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
             SnakeGameplaySystem::Control::right_key_down(Global::reg);
             break;
         case SDL_SCANCODE_SPACE:
