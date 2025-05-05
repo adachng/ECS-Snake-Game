@@ -660,6 +660,8 @@ namespace SnakeGameplaySystem
         return false;
     }
 
+    static long get_score(entt::registry &reg) { return reg.view<SnakePart>().size(); }
+
     namespace Control
     {
         static void shift_key_up(entt::registry &reg)
