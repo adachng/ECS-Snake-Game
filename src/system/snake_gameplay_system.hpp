@@ -2,6 +2,7 @@
 #define SRC_SYSTEM_SNAKE_DISCRETE_VECTOR_HPP
 
 #include <vector>
+#include <string>
 
 #include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_log.h>
