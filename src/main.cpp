@@ -31,7 +31,11 @@ struct AppState
 
 namespace Global
 {
-    static constexpr float SPEED = 2.0f;
+    static constexpr int WINDOW_WIDTH = 640;  // MUST BE > 0
+    static constexpr int WINDOW_HEIGHT = 480; // MUST BE > 0
+    static constexpr int MAP_MARGIN_PX = 20;  // MUST BE >= 0
+
+    static constexpr float SPEED = 2.0f; // MUST BE >= 0.0f
     static constexpr float SPEED_UP_FACTOR = 5.0f;
     static constexpr float TICK_UNIT_TRAVELLED = 0.25f; // MUST BE <= 0.5f, see Nyquist-Shannon sampling theorem
     static constexpr int MAP_WIDTH = 20;                // MUST BE >= 1
@@ -46,11 +50,125 @@ namespace Global
     sigslot::signal<entt::registry &> gameplayUpdateSig;
 } // namespace Global
 
-void init_gameplay_scene(entt::registry &reg)
+static SDL_FRect get_centered_boundary(SDL_Window *window, const int &hMargin, const int &vMargin)
+{
+    SDL_assert(window != nullptr);
+    SDL_FRect ret;
+
+    int windowWidth, windowHeight;
+    if (!SDL_GetWindowSize(window, &windowWidth, &windowHeight))
+    {
+        std::cerr << "SDL_GetWindowSize error: " << SDL_GetError() << std::endl;
+        return ret;
+    }
+
+    if (windowWidth < windowHeight)
+    {
+        ret.w = static_cast<float>(windowWidth - 2 * hMargin);
+    }
+    else
+    {
+        ret.w = static_cast<float>(windowHeight - 2 * vMargin);
+    }
+    ret.h = ret.w;
+    ret.x = static_cast<float>(windowWidth) / 2.0f - ret.w / 2.0f;
+    ret.y = static_cast<float>(windowHeight - vMargin) - ret.h;
+    return ret;
+}
+
+static bool render_map_border(SDL_Window *window, SDL_Renderer *renderer, const int &hMargin, const int &vMargin)
+{
+    SDL_assert(window != nullptr);
+    SDL_assert(renderer != nullptr);
+    if (!SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE))
+    {
+        std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+    if (!SDL_RenderClear(renderer))
+    {
+        std::cerr << "SDL_RenderClear error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+    if (!SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE))
+    {
+        std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    int windowWidth, windowHeight;
+    if (!SDL_GetWindowSize(window, &windowWidth, &windowHeight))
+    {
+        std::cerr << "SDL_GetWindowSize error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    SDL_FRect mapBoundaryBox = get_centered_boundary(window, hMargin, vMargin);
+    if (mapBoundaryBox.w <= 0.0f || mapBoundaryBox.h <= 0.0f)
+        return false;
+
+    if (!SDL_RenderRect(renderer, &mapBoundaryBox))
+    {
+        std::cerr << "SDL_RenderRect error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL_Renderer *renderer, const int &hMargin, const int &vMargin)
+{
+    SDL_assert(window != nullptr);
+    SDL_assert(renderer != nullptr);
+    if (!render_map_border(window, renderer, hMargin, vMargin))
+    {
+        return false;
+    }
+
+    auto gameplayVecVec = SnakeGameplaySystem::get_map(reg);
+    SDL_FRect mapBoundaryBox = get_centered_boundary(window, hMargin, vMargin);
+    const float gridHeight = static_cast<float>(mapBoundaryBox.h) / static_cast<float>(gameplayVecVec.size());
+    for (int i = 0; i < gameplayVecVec.size(); i++)
+    {
+        const float gridWidth = static_cast<float>(mapBoundaryBox.w) / static_cast<float>(gameplayVecVec[i].size());
+        for (int j = 0; j < gameplayVecVec[i].size(); j++)
+        {
+            const Uint8 r = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::APPLE) ? 255 : 0;
+            const Uint8 g = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_BODY) ? 255 : 0;
+            const Uint8 b = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_HEAD) ? 255 : 0;
+            const float xCoord = static_cast<float>(j) * gridWidth + mapBoundaryBox.x;
+            const float yCoord = static_cast<float>(i) * gridHeight + mapBoundaryBox.y;
+            SDL_FRect grid = {xCoord, yCoord, gridWidth, gridHeight};
+            if (r > 0 || g > 0 || b > 0)
+            {
+                if (!SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE))
+                {
+                    std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+                    return false;
+                }
+                if (!SDL_RenderFillRect(renderer, &grid))
+                {
+                    std::cerr << "SDL_RenderRect error: " << SDL_GetError() << std::endl;
+                    return false;
+                }
+            }
+        }
+    }
+
+    if (!SDL_RenderPresent(renderer))
+    {
+        std::cerr << "SDL_RenderPresent error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+static void init_gameplay_scene(entt::registry &reg)
 {
     auto gameStateEntity = reg.create();
     reg.emplace<DeltaTime>(gameStateEntity, Global::DESIRED_TICK_PERIOD_MS);
-    reg.emplace<KeyControl>(gameStateEntity, 'w', false);
+    reg.emplace<KeyControl>(gameStateEntity, 'd', false);
     reg.emplace<SnakeBoundary2D>(gameStateEntity, Global::MAP_WIDTH, Global::MAP_HEIGHT);
 
     auto appleEntity = reg.create();
@@ -60,7 +178,10 @@ void init_gameplay_scene(entt::registry &reg)
     reg.emplace<SnakeApple>(appleEntity);
 
     auto snakeHeadEntity = reg.create();
-    reg.emplace<Position>(snakeHeadEntity, 0.5f, 0.5f);
+    if (centerY >= 1.5f)
+        reg.emplace<Position>(snakeHeadEntity, 0.5f, centerY - 1.0f);
+    else
+        reg.emplace<Position>(snakeHeadEntity, 0.5f, 0.5f);
     reg.emplace<Velocity>(snakeHeadEntity, 0.0f, 0.0f);
     reg.emplace<SnakePartHead>(snakeHeadEntity, Global::SPEED, Global::SPEED_UP_FACTOR);
 }
@@ -81,7 +202,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
     *appstate = new AppState();
     AppState *appstateCasted = static_cast<AppState *>(*appstate);
 
-    appstateCasted->window = SDL_CreateWindow("Snake Game CPP", 640, 480, 0);
+    appstateCasted->window = SDL_CreateWindow("Snake Game CPP", Global::WINDOW_WIDTH, Global::WINDOW_HEIGHT, SDL_WINDOW_INPUT_FOCUS);
     if (appstateCasted->window == nullptr)
     {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
@@ -102,6 +223,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
     Global::gameplayUpdateSig.connect(SystemTranslate2D::update);
     Global::gameplayUpdateSig.connect(SnakeGameplaySystem::update);
 
+    render_gameplay_visuals(Global::reg, appstateCasted->window, appstateCasted->renderer, Global::MAP_MARGIN_PX, Global::MAP_MARGIN_PX);
+
     appstateCasted->previousTick = SDL_GetTicks(); // for FixedUpdate() equivalent
     return SDL_APP_CONTINUE;
 }
@@ -120,18 +243,20 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         appstateCasted->previousTick += Global::DESIRED_TICK_PERIOD_MS;
 
         if (SnakeGameplaySystem::is_game_success(Global::reg))
-            SDL_assert(true && false);
+            SDL_assert_release(true && false && "GAME WON"); // TODO
         else if (SnakeGameplaySystem::is_game_failure(Global::reg))
-            SDL_assert(false && false);
+            SDL_assert_release(false && false && "GAME FAILED"); // TODO
+        // SDL_Log("Score: %ld", SnakeGameplaySystem::get_score(Global::reg)); // TODO
 
-        SDL_Log("\033[2J\033[H");
-        SDL_Log("current map at t = %lums", now);
-        if (SnakeGameplaySystem::is_speeding_up(Global::reg))
-            SDL_Log("SPED UP! Snake's velocity.x = %f, .y = %f", SnakeGameplaySystem::Debug::get_snake_head_velocity(Global::reg).x, SnakeGameplaySystem::Debug::get_snake_head_velocity(Global::reg).y);
-        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(Global::reg));
-        SDL_Log("Score: %ld", SnakeGameplaySystem::get_score(Global::reg));
+        static auto previousMap = SnakeGameplaySystem::get_map(Global::reg);
+        auto currentMap = SnakeGameplaySystem::get_map(Global::reg);
+        if (currentMap != previousMap)
+        {
+            previousMap = currentMap;
+            render_gameplay_visuals(Global::reg, appstateCasted->window, appstateCasted->renderer, Global::MAP_MARGIN_PX, Global::MAP_MARGIN_PX);
+        }
     }
-    SDL_Delay(Global::DESIRED_TICK_PERIOD_MS / 4U);
+    SDL_Delay(Global::DESIRED_TICK_PERIOD_MS / 2U); // MUST BE DIVIDED BY >= 2U; saves some CPU
 
     return SDL_APP_CONTINUE;
 }
