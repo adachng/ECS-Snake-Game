@@ -70,9 +70,6 @@ namespace SnakeGameplaySystem
         }
     } // namespace Util
 
-    template <typename T = entt::entity>
-    static T *get_snake_body_at_indices(entt::registry &reg, const int &targetI, const int &targetJ, const int &sizeY);
-
     static std::vector<std::vector<MapSlotState>> get_map(entt::registry &reg);
     static bool is_game_success(entt::registry &reg);
     static bool is_game_failure(entt::registry &reg);
@@ -445,30 +442,6 @@ namespace SnakeGameplaySystem
         return ret;
     }
 
-    template <typename T>
-    static T *get_snake_body_at_indices(entt::registry &reg, const int &targetI, const int &targetJ, const int &sizeY)
-    {
-        T *ret = nullptr;
-
-        auto snakeBoundaryView = reg.view<SnakeBoundary2D>();
-        SDL_assert(snakeBoundaryView.size() == 1);
-        const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
-
-        auto view = reg.view<Position, SnakePart>();
-        for (auto entity : view)
-        {
-            Position pos = reg.get<Position>(entity);
-            long i = -1L, j = -1L;
-            SnakeGameplaySystem::Util::to_indices(pos, &j, &i, boundary.y);
-            if (i == targetI && j == targetJ)
-            {
-                ret = &entity;
-                break;
-            }
-        }
-        return ret;
-    }
-
     static bool is_going_backwards(entt::registry &reg, const char &directionToGo)
     {
         struct Index
@@ -531,47 +504,39 @@ namespace SnakeGameplaySystem
         auto view = reg.view<Position, SnakePart>();
         for (auto &entity : view)
         {
+            const Position &pos = reg.get<Position>(entity);
+            long xIndex, yIndex;
+            Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
             switch (directionToGo)
             {
             // Get the body part in that direction and get its currentDirection.
             // If the currentDirection is opposite of directionToGo, return true.
             case 'w':
             {
-                auto *entity_ptr = get_snake_body_at_indices(reg, i - 1, j, boundary.y);
-                if (entity_ptr == nullptr)
-                    return false;
-                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 's')
+                if (xIndex == j && yIndex == i - 1 && reg.get<SnakePart>(entity).currentDirection == 's')
                     return true;
                 break;
             }
             case 'a':
             {
-                auto *entity_ptr = get_snake_body_at_indices(reg, i, j - 1, boundary.y);
-                if (entity_ptr == nullptr)
-                    return false;
-                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'd')
+                if (xIndex == j - 1 && yIndex == i && reg.get<SnakePart>(entity).currentDirection == 'd')
                     return true;
                 break;
             }
             case 's':
             {
-                auto *entity_ptr = get_snake_body_at_indices(reg, i + 1, j, boundary.y);
-                if (entity_ptr == nullptr)
-                    return false;
-                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'w')
+                if (xIndex == j && yIndex == i + 1 && reg.get<SnakePart>(entity).currentDirection == 'w')
                     return true;
                 break;
             }
             case 'd':
             {
-                auto *entity_ptr = get_snake_body_at_indices(reg, i, j + 1, boundary.y);
-                if (entity_ptr == nullptr)
-                    return false;
-                if (reg.get<SnakePart>(*entity_ptr).currentDirection == 'a')
+                if (xIndex == j + 1 && yIndex == i && reg.get<SnakePart>(entity).currentDirection == 'a')
                     return true;
                 break;
             }
             default:
+                SDL_assert(directionToGo == 'w' || directionToGo == 'a' || directionToGo == 's' || directionToGo == 'd');
                 return true;
             }
         }
