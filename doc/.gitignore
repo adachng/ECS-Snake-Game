@@ -1,0 +1,4 @@
+# Everything other than this file itself and the Doxygen config file
+*
+!.gitignore
+!Doxyfile
