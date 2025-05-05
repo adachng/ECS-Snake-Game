@@ -33,7 +33,7 @@ namespace Global
 {
     static constexpr int WINDOW_WIDTH = 640;  // MUST BE > 0
     static constexpr int WINDOW_HEIGHT = 480; // MUST BE > 0
-    static constexpr int MAP_MARGIN_PX = 20;  // MUST BE >= 0
+    static constexpr int MAP_MARGIN_PX = 30;  // MUST BE >= 0
 
     static constexpr float SPEED = 2.0f; // MUST BE >= 0.0f
     static constexpr float SPEED_UP_FACTOR = 5.0f;
@@ -80,7 +80,7 @@ static bool render_map_border(SDL_Window *window, SDL_Renderer *renderer, const 
 {
     SDL_assert(window != nullptr);
     SDL_assert(renderer != nullptr);
-    if (!SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE))
+    if (!SDL_SetRenderDrawColor(renderer, 0U, 0U, 0U, SDL_ALPHA_OPAQUE))
     {
         std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
         return false;
@@ -90,7 +90,7 @@ static bool render_map_border(SDL_Window *window, SDL_Renderer *renderer, const 
         std::cerr << "SDL_RenderClear error: " << SDL_GetError() << std::endl;
         return false;
     }
-    if (!SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE))
+    if (!SDL_SetRenderDrawColor(renderer, 255U, 255U, 255U, SDL_ALPHA_OPAQUE))
     {
         std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
         return false;
@@ -133,9 +133,9 @@ static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL
         const float gridWidth = static_cast<float>(mapBoundaryBox.w) / static_cast<float>(gameplayVecVec[i].size());
         for (int j = 0; j < gameplayVecVec[i].size(); j++)
         {
-            const Uint8 r = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::APPLE) ? 255 : 0;
-            const Uint8 g = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_BODY) ? 255 : 0;
-            const Uint8 b = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_HEAD) ? 255 : 0;
+            const Uint8 r = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::APPLE) ? 255U : 0U;
+            const Uint8 g = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_BODY) ? 255U : 0U;
+            const Uint8 b = (gameplayVecVec[i][j] & SnakeGameplaySystem::MapSlotState::SNAKE_HEAD) ? 255U : 0U;
             const float xCoord = static_cast<float>(j) * gridWidth + mapBoundaryBox.x;
             const float yCoord = static_cast<float>(i) * gridHeight + mapBoundaryBox.y;
             SDL_FRect grid = {xCoord, yCoord, gridWidth, gridHeight};
@@ -153,6 +153,19 @@ static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL
                 }
             }
         }
+    }
+
+    if (!SDL_SetRenderDrawColor(renderer, 255U, 255U, 255U, SDL_ALPHA_OPAQUE))
+    {
+        std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+        return false;
+    }
+
+    const float textY = mapBoundaryBox.y + mapBoundaryBox.h + 10.0f;
+    if (!SDL_RenderDebugTextFormat(renderer, mapBoundaryBox.x, textY, "Score: %lu", SnakeGameplaySystem::get_score(reg)))
+    {
+        std::cerr << "SDL_RenderDebugTextFormat error: " << SDL_GetError() << std::endl;
+        return false;
     }
 
     if (!SDL_RenderPresent(renderer))
@@ -246,7 +259,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
             SDL_assert_release(true && false && "GAME WON"); // TODO
         else if (SnakeGameplaySystem::is_game_failure(Global::reg))
             SDL_assert_release(false && false && "GAME FAILED"); // TODO
-        // SDL_Log("Score: %ld", SnakeGameplaySystem::get_score(Global::reg)); // TODO
 
         static auto previousMap = SnakeGameplaySystem::get_map(Global::reg);
         auto currentMap = SnakeGameplaySystem::get_map(Global::reg);
