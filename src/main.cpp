@@ -49,6 +49,7 @@ namespace Global
 
     entt::registry reg;
     sigslot::signal<entt::registry &> gameplayUpdateSig;
+    bool isGamePaused = false;
 } // namespace Global
 
 static SDL_FRect get_centered_boundary(SDL_Window *window, const int &hMargin, const int &vMargin)
@@ -164,7 +165,16 @@ static bool render_gameplay_visuals(entt::registry &reg, SDL_Window *window, SDL
 
     const float textY = mapBoundaryBox.y + mapBoundaryBox.h + 10.0f;
     std::string textContent;
-    if (SnakeGameplaySystem::is_game_success(reg))
+    if (Global::isGamePaused)
+    {
+        if (!SDL_SetRenderDrawColor(renderer, 255U, 255U, 255U, SDL_ALPHA_OPAQUE))
+        {
+            std::cerr << "SDL_SetRenderDrawColor error: " << SDL_GetError() << std::endl;
+            return false;
+        }
+        textContent = "Game paused. Press ESC to resume. Score: %lu";
+    }
+    else if (SnakeGameplaySystem::is_game_success(reg))
     {
         if (!SDL_SetRenderDrawColor(renderer, 0U, 255U, 0U, SDL_ALPHA_OPAQUE))
         {
@@ -276,13 +286,13 @@ SDL_AppResult SDL_AppIterate(void *appstate)
         // The reason why is because of how the body follows the head.
         // It is dependent on body entites 2 blocks away in 4 directions from head.
         // If system lags, the head may get detached if deltaTime is not fixed.
-        if (!SnakeGameplaySystem::is_game_success(Global::reg) && !SnakeGameplaySystem::is_game_failure(Global::reg))
+        if (!Global::isGamePaused && !SnakeGameplaySystem::is_game_success(Global::reg) && !SnakeGameplaySystem::is_game_failure(Global::reg))
             Global::gameplayUpdateSig(Global::reg); // effectively pauses game if failed or succeeded
         appstateCasted->previousTick += Global::DESIRED_TICK_PERIOD_MS;
 
         static auto previousMap = SnakeGameplaySystem::get_map(Global::reg);
         auto currentMap = SnakeGameplaySystem::get_map(Global::reg);
-        if (currentMap != previousMap)
+        if (currentMap != previousMap || Global::isGamePaused)
         {
             previousMap = currentMap;
             render_gameplay_visuals(Global::reg, appstateCasted->window, appstateCasted->renderer, Global::MAP_MARGIN_PX, Global::MAP_MARGIN_PX);
@@ -306,7 +316,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         switch (scancode)
         {
         case SDL_SCANCODE_ESCAPE:
-            return SDL_APP_SUCCESS;
+            Global::isGamePaused = !Global::isGamePaused;
+            break;
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_UP:
             SnakeGameplaySystem::Control::up_key_down(Global::reg);
