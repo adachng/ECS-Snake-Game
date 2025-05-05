@@ -177,7 +177,7 @@ namespace SnakeGameplaySystem
             const SnakeBoundary2D boundary = reg.get<SnakeBoundary2D>(snakeBoundaryView.front());
             int i = currentSnakeHeadIndex.i, j = currentSnakeHeadIndex.j;
             switch (travelledDirection)
-            {
+            { // spawn in neck parta
             case 'w':
             {
                 auto entitySnakePart = reg.create();
@@ -210,42 +210,85 @@ namespace SnakeGameplaySystem
 
             if (!isAteApple)
             {
-                // At this point, i and j are at the neck.
-                // So we just go to the opposite direction until
-                // we either hit a wall or empty space. When that happens,
-                // that is the body part we need to destroy.
-                auto traverseOppositeOfDirection = [](const char &c, int &i, int &j)
+                // At this point, i and j are at the neck (already spawned in).
+                // Since no apple is eaten, we need to destroy the tail.
+                // We can find the tail by looking at all the SnakePart
+                // currentDirection as well as their Position to determine
+                // where the next part should be. Have a pool of these next part
+                // indices. The tail is the one that has a pos not in that pool.
+                auto snakePartView = reg.view<Position, SnakePart>();
+                std::vector<Index> indexVec;
+                for (const auto &entity : snakePartView)
                 {
-                    switch (c)
+                    const bool isValid = reg.all_of<SnakePart, Position>(entity);
+                    SDL_assert(isValid);
+                    Position pos = reg.get<Position>(entity);
+                    const SnakePart snakePart = reg.get<SnakePart>(entity);
+                    switch (snakePart.currentDirection)
                     {
                     case 'w':
-                        i++;
-                        break;
-                    case 'a':
-                        j++;
-                        break;
-                    case 's':
-                        i--;
-                        break;
-                    case 'd':
-                        j--;
-                        break;
-                    default:
+                    {
+                        pos.y += 1.0f;
+                        long xIndex, yIndex;
+                        Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+                        if (xIndex >= 0 && xIndex < boundary.x && yIndex >= 0 && yIndex < boundary.y)
+                            indexVec.push_back(Index(yIndex, xIndex));
                         break;
                     }
-                    return;
-                };
-                int previousI = i, previousJ = j;
-                auto *entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
-                while (entity_ptr != nullptr)
-                {
-                    previousI = i;
-                    previousJ = j;
-                    traverseOppositeOfDirection(reg.get<SnakePart>(*entity_ptr).currentDirection, i, j);
-                    entity_ptr = get_snake_body_at_indices(reg, i, j, boundary.y);
+                    case 'a':
+                    {
+                        pos.x -= 1.0f;
+                        long xIndex, yIndex;
+                        Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+                        if (xIndex >= 0 && xIndex < boundary.x && yIndex >= 0 && yIndex < boundary.y)
+                            indexVec.push_back(Index(yIndex, xIndex));
+                        break;
+                    }
+                    case 's':
+                    {
+                        pos.y -= 1.0f;
+                        long xIndex, yIndex;
+                        Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+                        if (xIndex >= 0 && xIndex < boundary.x && yIndex >= 0 && yIndex < boundary.y)
+                            indexVec.push_back(Index(yIndex, xIndex));
+                        break;
+                    }
+                    case 'd':
+                    {
+                        pos.x += 1.0f;
+                        long xIndex, yIndex;
+                        Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+                        if (xIndex >= 0 && xIndex < boundary.x && yIndex >= 0 && yIndex < boundary.y)
+                            indexVec.push_back(Index(yIndex, xIndex));
+                        break;
+                    }
+                    }
                 }
-                entity_ptr = get_snake_body_at_indices(reg, previousI, previousJ, boundary.y);
-                reg.destroy(*entity_ptr);
+                // Now that the pool of indices of next parts are gotten,
+                // look for the 1 part that doesn't have index within the pool.
+                bool hasFoundTail = false;
+                for (auto &entity : snakePartView)
+                {
+                    const Position pos = reg.get<Position>(entity);
+                    long xIndex, yIndex;
+                    Util::to_indices(pos, &xIndex, &yIndex, boundary.y);
+                    bool isInPool = false;
+                    for (Index index : indexVec)
+                    {
+                        if (index.i == yIndex && index.j == xIndex)
+                        {
+                            isInPool = true;
+                            break;
+                        }
+                    }
+                    if (!isInPool)
+                    {
+                        hasFoundTail = true;
+                        reg.destroy(entity);
+                        break;
+                    }
+                }
+                SDL_assert(hasFoundTail);
             }
         }
     }
