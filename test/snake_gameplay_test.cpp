@@ -227,4 +227,71 @@ namespace
         // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
         EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
     }
+
+    TEST(SnakeGameplaySystemTest, TailMoveOutOfWayBeforeHead)
+    {
+        entt::registry registry;
+        { // create game state entity; 3x3 map
+            auto entity = registry.create();
+            registry.emplace<KeyControl>(entity, 'w');
+            registry.emplace<DeltaTime>(entity, 100U);
+            registry.emplace<SnakeBoundary2D>(entity, 3, 3);
+        }
+        { // create snake head
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 0.5f, 0.5f);
+            registry.emplace<Velocity>(entity, 0.0f, 0.0f);
+            registry.emplace<SnakePartHead>(entity, 10.0f, 1.0f); // 10 /s speed
+        }
+        { // create snake body
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 0.5f, 1.5f);
+            registry.emplace<SnakePart>(entity, 'd');
+        }
+        { // create snake body
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 1.5f, 1.5f);
+            registry.emplace<SnakePart>(entity, 's');
+        }
+        { // create snake body
+            auto entity = registry.create();
+            registry.emplace<Position>(entity, 1.5f, 0.5f);
+            registry.emplace<SnakePart>(entity, 'a');
+        }
+        // . . .
+        // x x .
+        // $ x . ; snake head is going upwards
+
+        SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_snake_head_pos(registry);                    // NOTE: toggle to see
+        SnakeGameplaySystem::Debug::print_snake_head_vel(registry);                    // NOTE: toggle to see
+
+        SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'w'
+        SystemTranslate2D::update(registry);   // 0.1s has passed
+        SnakeGameplaySystem::update(registry); // update system state
+
+        // At this point, the game should neither fail nor succeed.
+        EXPECT_FALSE(SnakeGameplaySystem::is_game_success(registry));
+        EXPECT_FALSE(SnakeGameplaySystem::is_game_failure(registry));
+
+        // x $ @
+        using namespace SnakeGameplaySystem;
+        std::vector<std::vector<MapSlotState>> comp(3, std::vector<MapSlotState>(3, MapSlotState::EMPTY));
+        comp[1][0] = MapSlotState::SNAKE_HEAD;
+        comp[2][0] = MapSlotState::SNAKE_BODY;
+        comp[2][1] = MapSlotState::SNAKE_BODY;
+        comp[1][1] = MapSlotState::SNAKE_BODY;
+        // . . .
+        // $ x .
+        // x x . ; snake head is going upwards
+
+        // SDL_Log("turn 2 =");                                                           // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_snake_head_pos(registry);                    // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_snake_head_vel(registry);                    // NOTE: toggle to see
+        // SDL_Log("comp =");                                                             // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_map(comp);                                   // NOTE: toggle to see
+        EXPECT_TRUE(SnakeGameplaySystem::get_map(registry) == comp);
+    }
 } // namespace
