@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(Snake-Game-CPP
+    VERSION "1.0.0"
+    HOMEPAGE_URL "https://github.com/adachng/Snake-Game-CPP"
     LANGUAGES CXX
 )
 
