@@ -377,7 +377,7 @@ namespace SnakeGameplaySystem
 
         auto snakeHeadView = reg.view<Velocity, SnakePartHead>();
         SDL_assert(snakeHeadView.storage<SnakePartHead>()->size() == 1);
-        for (auto& entity : snakeHeadView)
+        for (auto &entity : snakeHeadView)
         {
             Velocity &vel = snakeHeadView.get<Velocity>(entity);
             SnakePartHead &headPart = snakeHeadView.get<SnakePartHead>(entity);
@@ -555,7 +555,7 @@ namespace SnakeGameplaySystem
         std::vector<std::vector<MapSlotState>> ret(ySize, std::vector<MapSlotState>(xSize, MapSlotState::EMPTY));
 
         auto snakePartView = reg.view<SnakePart, Position>();
-        for (auto& entity : snakePartView)
+        for (auto &entity : snakePartView)
         {
             const Position &pos = snakePartView.get<Position>(entity);
             long xIndex, yIndex;
@@ -565,7 +565,7 @@ namespace SnakeGameplaySystem
         }
 
         auto snakePartHeadView = reg.view<SnakePartHead, Position>();
-        for (auto& entity : snakePartHeadView)
+        for (auto &entity : snakePartHeadView)
         {
             const Position &pos = snakePartView.get<Position>(entity);
             long xIndex, yIndex;
@@ -578,7 +578,7 @@ namespace SnakeGameplaySystem
         }
 
         auto appleView = reg.view<SnakeApple, Position>();
-        for (auto& entity : appleView)
+        for (auto &entity : appleView)
         {
             const Position &pos = appleView.get<Position>(entity);
             long xIndex, yIndex;
