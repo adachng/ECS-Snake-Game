@@ -12,7 +12,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 This software uses third-party libraries provided 'as-is'. See individual license files for complete terms.
 
-### [SDL](https://github.com/libsdl-org/SDL) ([3.2.10](https://github.com/libsdl-org/SDL/releases/tag/release-3.2.10))
+### [SDL](https://github.com/libsdl-org/SDL) ([3.2.12](https://github.com/libsdl-org/SDL/releases/tag/release-3.2.12))
 
 **Copyright:** © 1997-2025 Sam Lantinga<br>
 **License:** zlib License (see [license/SDL.txt](license/SDL.txt))<br>
