@@ -316,6 +316,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         switch (scancode)
         {
         case SDL_SCANCODE_ESCAPE:
+            if (SnakeGameplaySystem::is_game_success(Global::reg) || SnakeGameplaySystem::is_game_failure(Global::reg))
+                return SDL_APP_SUCCESS;
             Global::isGamePaused = !Global::isGamePaused;
             break;
         case SDL_SCANCODE_W:
