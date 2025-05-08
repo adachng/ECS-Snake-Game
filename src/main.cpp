@@ -267,8 +267,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
     }
 
     init_gameplay_scene(Global::reg);
-    Global::gameplayUpdateSig.connect(SystemTranslate2D::update);
-    Global::gameplayUpdateSig.connect(SnakeGameplaySystem::update);
+    SystemTranslate2D::init(Global::gameplayUpdateSig);
+    SnakeGameplaySystem::init(Global::gameplayUpdateSig, Global::reg);
 
     render_gameplay_visuals(Global::reg, appstateCasted->window, appstateCasted->renderer, Global::MAP_MARGIN_PX, Global::MAP_MARGIN_PX);
 
