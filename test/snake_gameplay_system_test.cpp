@@ -155,123 +155,117 @@ namespace
         EXPECT_FLOAT_EQ(SnakeGameplaySystem::Debug::get_snake_head_velocity(registry).y, 4.56f);
     }
 
-    TEST(SnakeGameplaySystemTest, DiscretisePosition)
+    TEST(SnakeGameplaySystemTest, GetIndexFromPosition)
     {
         Position pos;
         long gridX, gridY;
 
         pos.y = pos.x = 0.0f;
-        SnakeGameplaySystem::Util::to_grid_cell(pos, &gridX, &gridY);
-        EXPECT_EQ(gridX, 1L);
-        EXPECT_EQ(gridY, 1L);
+        SnakeGameplaySystem::Util::get_index_from_pos(pos, &gridX, &gridY, 9L);
+        EXPECT_EQ(gridX, 0L);
+        EXPECT_EQ(gridY, 8L);
 
         pos.y = pos.x = 0.1f;
-        SnakeGameplaySystem::Util::to_grid_cell(pos, &gridX, &gridY);
-        EXPECT_EQ(gridX, 1L);
-        EXPECT_EQ(gridY, 1L);
+        SnakeGameplaySystem::Util::get_index_from_pos(pos, &gridX, &gridY, 9L);
+        EXPECT_EQ(gridX, 0L);
+        EXPECT_EQ(gridY, 8L);
 
         pos.y = pos.x = 1.0f;
-        SnakeGameplaySystem::Util::to_grid_cell(pos, &gridX, &gridY);
-        EXPECT_EQ(gridX, 2L);
-        EXPECT_EQ(gridY, 2L);
+        SnakeGameplaySystem::Util::get_index_from_pos(pos, &gridX, &gridY, 9L);
+        EXPECT_EQ(gridX, 1L);
+        EXPECT_EQ(gridY, 7L);
 
         pos.y = pos.x = 4.99999f;
-        SnakeGameplaySystem::Util::to_grid_cell(pos, &gridX, &gridY);
-        EXPECT_EQ(gridX, 5L);
-        EXPECT_EQ(gridY, 5L);
+        SnakeGameplaySystem::Util::get_index_from_pos(pos, &gridX, &gridY, 9L);
+        EXPECT_EQ(gridX, 4L);
+        EXPECT_EQ(gridY, 4L);
 
         pos.y = pos.x = 5.0f;
-        SnakeGameplaySystem::Util::to_grid_cell(pos, &gridX, &gridY);
-        EXPECT_EQ(gridX, 6L);
-        EXPECT_EQ(gridY, 6L);
+        SnakeGameplaySystem::Util::get_index_from_pos(pos, &gridX, &gridY, 9L);
+        EXPECT_EQ(gridX, 5L);
+        EXPECT_EQ(gridY, 3L);
     }
 
-    TEST(SnakeGameplaySystemTest, InverseDiscretisePosition)
+    TEST(SnakeGameplaySystemTest, GetPositionFromIndex)
     {
         Position pos;
         long x, y;
 
         y = x = 0;
-        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
-        EXPECT_FLOAT_EQ(pos.x, -0.5f);
-        EXPECT_FLOAT_EQ(pos.y, -0.5f);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 9L);
+        EXPECT_FLOAT_EQ(pos.x, 0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 8.5f);
 
         y = x = -1;
-        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
-        EXPECT_FLOAT_EQ(pos.x, -1.5f);
-        EXPECT_FLOAT_EQ(pos.y, -1.5f);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 9L);
+        EXPECT_FLOAT_EQ(pos.x, -0.5f);
+        EXPECT_FLOAT_EQ(pos.y, 9.5f);
 
         y = x = 1;
-        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
-        EXPECT_FLOAT_EQ(pos.x, 0.5f);
-        EXPECT_FLOAT_EQ(pos.y, 0.5f);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 9L);
+        EXPECT_FLOAT_EQ(pos.x, 1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 7.5f);
 
         y = x = -2;
-        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
-        EXPECT_FLOAT_EQ(pos.x, -2.5f);
-        EXPECT_FLOAT_EQ(pos.y, -2.5f);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 9L);
+        EXPECT_FLOAT_EQ(pos.x, -1.5f);
+        EXPECT_FLOAT_EQ(pos.y, 10.5f);
 
         y = x = 2;
-        pos = SnakeGameplaySystem::Util::from_grid_cell(x, y);
-        EXPECT_FLOAT_EQ(pos.x, 1.5f);
-        EXPECT_FLOAT_EQ(pos.y, 1.5f);
-    }
-
-    TEST(SnakeGameplaySystemTest, FromIndices)
-    {
-        Position pos;
-        long x, y;
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 9L);
+        EXPECT_FLOAT_EQ(pos.x, 2.5f);
+        EXPECT_FLOAT_EQ(pos.y, 6.5f);
 
         // 3-by-3 array. [0][1] is top-middle, [2][0] is bottom-left.
 
         y = x = 0; // top-left
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 0.5f);
         EXPECT_FLOAT_EQ(pos.y, 2.5f);
 
         y = x = 1; // middle
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 1.5f);
         EXPECT_FLOAT_EQ(pos.y, 1.5f);
 
         y = x = 2; // bottom-right
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 2.5f);
         EXPECT_FLOAT_EQ(pos.y, 0.5f);
 
         x = 0;
         y = 2; // bottom-left
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 0.5f);
         EXPECT_FLOAT_EQ(pos.y, 0.5f);
 
         x = 2;
         y = 0; // top-right
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 2.5f);
         EXPECT_FLOAT_EQ(pos.y, 2.5f);
 
         x = 1;
         y = 0; // center-top
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 1.5f);
         EXPECT_FLOAT_EQ(pos.y, 2.5f);
 
         x = 0;
         y = 1; // center-left
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 0.5f);
         EXPECT_FLOAT_EQ(pos.y, 1.5f);
 
         x = 2;
         y = 1; // center-right
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 2.5f);
         EXPECT_FLOAT_EQ(pos.y, 1.5f);
 
         x = 1;
         y = 2; // center-bottom
-        pos = SnakeGameplaySystem::Util::from_indices(x, y, 3);
+        pos = SnakeGameplaySystem::Util::get_pos_from_index(x, y, 3);
         EXPECT_FLOAT_EQ(pos.x, 1.5f);
         EXPECT_FLOAT_EQ(pos.y, 0.5f);
     }

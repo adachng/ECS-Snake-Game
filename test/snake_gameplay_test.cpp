@@ -32,6 +32,7 @@ namespace
             registry.emplace<SnakePart>(entity, 'd');
         }
 
+        SnakeGameplaySystem::init(registry);
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
         SnakeGameplaySystem::update(registry);
@@ -72,6 +73,7 @@ namespace
         // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
 
         // SDL_Log("First update:");
+        SnakeGameplaySystem::init(registry);
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
         // SDL_Log("Second update:");
@@ -115,6 +117,7 @@ namespace
             registry.emplace<SnakePartHead>(entity, 10.0f, 1.0f); // 10 /s speed
         }
 
+        SnakeGameplaySystem::init(registry);
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         // SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
         // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
@@ -169,6 +172,7 @@ namespace
         // SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
         // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
 
+        SnakeGameplaySystem::init(registry);
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
         SnakeGameplaySystem::update(registry);
@@ -208,6 +212,7 @@ namespace
             registry.emplace<SnakePartHead>(entity, 10.0f, 1.0f); // 10 /s speed
         }
 
+        SnakeGameplaySystem::init(registry);
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'd'
         SystemTranslate2D::update(registry);   // 0.1s has passed
         SnakeGameplaySystem::update(registry); // apple eaten this iteration
@@ -262,10 +267,11 @@ namespace
         // x x .
         // $ x . ; snake head is going upwards
 
-        SDL_Log("turn 1 =");                                                           // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_snake_head_pos(registry);                    // NOTE: toggle to see
-        SnakeGameplaySystem::Debug::print_snake_head_vel(registry);                    // NOTE: toggle to see
+        // SDL_Log("turn 1 ="); // NOTE: toggle to see
+        SnakeGameplaySystem::init(registry);
+        // SnakeGameplaySystem::Debug::print_map(SnakeGameplaySystem::get_map(registry)); // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_snake_head_pos(registry);                    // NOTE: toggle to see
+        // SnakeGameplaySystem::Debug::print_snake_head_vel(registry);                    // NOTE: toggle to see
 
         SnakeGameplaySystem::update(registry); // to set the velocity of the snake head based on 'w'
         SystemTranslate2D::update(registry);   // 0.1s has passed
