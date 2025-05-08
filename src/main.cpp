@@ -241,7 +241,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_SetAppMetadata("Snake Game CPP", "1.0.0", "com.github.adachng.SnakeGameCPP"))
+    if (!SDL_SetAppMetadata("Snake Game CPP", "1.0.1", "com.github.adachng.SnakeGameCPP"))
     {
         return SDL_APP_FAILURE;
     }
