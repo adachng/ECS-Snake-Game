@@ -241,7 +241,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_SetAppMetadata("Snake Game CPP", "1.0.1", "com.github.adachng.SnakeGameCPP"))
+    if (!SDL_SetAppMetadata("ECS Snake Game", "1.0.1", "com.github.adachng.SnakeGameCPP"))
     {
         return SDL_APP_FAILURE;
     }
@@ -249,7 +249,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv)
     *appstate = new AppState();
     AppState *appstateCasted = static_cast<AppState *>(*appstate);
 
-    appstateCasted->window = SDL_CreateWindow("Snake Game CPP", Global::WINDOW_WIDTH, Global::WINDOW_HEIGHT, SDL_WINDOW_INPUT_FOCUS);
+    appstateCasted->window = SDL_CreateWindow("ECS Snake Game", Global::WINDOW_WIDTH, Global::WINDOW_HEIGHT, SDL_WINDOW_INPUT_FOCUS);
     if (appstateCasted->window == nullptr)
     {
         std::cerr << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
